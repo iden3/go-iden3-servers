@@ -14,6 +14,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var ia identityagentsrv.Service
+
 func init() {
 	gin.SetMode(gin.ReleaseMode)
 }
@@ -37,7 +39,8 @@ func serveServiceApi() *http.Server {
 	return serviceapisrv
 }
 
-func Serve(ia identityagentsrv.Service) {
+func Serve(iaSrv identityagentsrv.Service) {
+	ia = iaSrv
 
 	stopch := make(chan interface{})
 
