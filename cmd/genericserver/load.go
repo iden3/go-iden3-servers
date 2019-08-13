@@ -249,7 +249,7 @@ func LoadGenesis(mt *merkletree.MerkleTree) *core.GenesisProofClaims {
 	kDis := C.Keys.Ethereum.KDis
 	kReen := C.Keys.Ethereum.KReen
 	kUpdateRoot := C.Keys.Ethereum.KUpdateRoot
-	id, proofClaims, err := core.CalculateIdGenesis(&kOp, kDis, kReen, kUpdateRoot)
+	id, proofClaims, err := core.CalculateIdGenesisFrom4Keys(&kOp, kDis, kReen, kUpdateRoot)
 	Assert("CalculateIdGenesis failed", err)
 
 	if *id != C.Id {

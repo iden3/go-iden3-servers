@@ -308,7 +308,7 @@ func NewIdentity(keyStorePath, keyStorePassword, keyStoreBabyPath, keyStoreBabyP
 	kUpdateRoot := accKUpdateRoot.Address
 
 	// create genesis identity
-	id, _, err := core.CalculateIdGenesis(kopPub, kDis, kReen, kUpdateRoot)
+	id, _, err := core.CalculateIdGenesisFrom4Keys(kopPub, kDis, kReen, kUpdateRoot)
 	if err != nil {
 		return err
 	}
