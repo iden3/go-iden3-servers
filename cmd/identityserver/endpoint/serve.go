@@ -30,6 +30,10 @@ func serveServiceApi() *http.Server {
 	serviceapi.POST("/identity", handlePostIdentity)
 	serviceapi.POST("/id/:id/claim", handlePostClaim)
 	serviceapi.POST("/id/:id/claims", handlePostClaims)
+	serviceapi.GET("/id/:id/claims", handleGetAllClaims)
+	serviceapi.GET("/id/:id/claims/emitted", handleGetAllEmittedClaims)
+	serviceapi.GET("/id/:id/claims/received", handleGetAllReceivedClaims)
+	serviceapi.GET("/id/:id/mt", handleGetFullMT)
 
 	serviceapisrv := &http.Server{Addr: genericserver.C.Server.ServiceApi, Handler: api}
 	go func() {
