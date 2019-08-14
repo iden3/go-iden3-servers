@@ -53,3 +53,70 @@ func handlePostIdentity(c *gin.Context) {
 		"proofOkKey": proofKOp,
 	})
 }
+
+type ClaimMsg struct {
+	ClaimHex string `json:"claim"`
+}
+
+func handlePostClaim(c *gin.Context) {
+	idHex := c.Param("id")
+	id, err := core.IDFromString(idHex)
+	if err != nil {
+		genericserver.Fail(c, "error on parse id", err)
+		return
+	}
+
+	var claimMsg ClaimMsg
+	err = c.BindJSON(&claimMsg)
+	if err != nil {
+		genericserver.Fail(c, "json parsing error", err)
+		return
+	}
+
+	claim, err := core.HexToClaim(claimMsg.ClaimHex)
+	if err != nil {
+		genericserver.Fail(c, "claim parsing error", err)
+		return
+	}
+
+	err = ia.AddClaim(&id, claim)
+	if err != nil {
+		genericserver.Fail(c, "AddClaim error", err)
+		return
+	}
+
+	c.JSON(200, gin.H{})
+}
+
+type ClaimsMsg struct {
+	ClaimsHex []string `json:"claims"`
+}
+
+func handlePostClaims(c *gin.Context) {
+	idHex := c.Param("id")
+	id, err := core.IDFromString(idHex)
+	if err != nil {
+		genericserver.Fail(c, "error on parse id", err)
+		return
+	}
+
+	var claimsMsg ClaimsMsg
+	err = c.BindJSON(&claimsMsg)
+	if err != nil {
+		genericserver.Fail(c, "json parsing error", err)
+		return
+	}
+
+	claims, err := core.HexArrayToClaimArray(claimsMsg.ClaimsHex)
+	if err != nil {
+		genericserver.Fail(c, "claims parsing error", err)
+		return
+	}
+	err = ia.AddClaims(&id, claims)
+	if err != nil {
+		genericserver.Fail(c, "AddClaims error", err)
+		return
+	}
+
+	c.JSON(200, gin.H{})
+}

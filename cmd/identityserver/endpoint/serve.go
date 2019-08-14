@@ -28,6 +28,8 @@ func serveServiceApi() *http.Server {
 
 	serviceapi.GET("/info", handleInfo)
 	serviceapi.POST("/identity", handlePostIdentity)
+	serviceapi.POST("/id/:id/claim", handlePostClaim)
+	serviceapi.POST("/id/:id/claims", handlePostClaims)
 
 	serviceapisrv := &http.Server{Addr: genericserver.C.Server.ServiceApi, Handler: api}
 	go func() {
