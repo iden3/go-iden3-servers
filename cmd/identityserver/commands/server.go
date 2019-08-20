@@ -42,7 +42,7 @@ func cmdStart(c *cli.Context) error {
 	}
 
 	storage := genericserver.LoadStorage()
-	identityagentService := identityagentsrv.New(storage)
+	identityagentService := identityagentsrv.New(storage, &identityagentsrv.RootUpdaterMock{})
 
 	endpoint.Serve(identityagentService)
 

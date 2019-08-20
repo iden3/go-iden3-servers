@@ -14,36 +14,20 @@ func handleInfo(c *gin.Context) {
 	})
 }
 
-type NewIdentityMsg struct {
-	ClaimAuthKOpHex       string   `json:"claimAuthKOp"`
-	ExtraGenesisClaimsHex []string `json:"extraGenesisClaims"`
+type CreateIdentityReq struct {
+	ClaimAuthKOp       *merkletree.Entry   `json:"claimAuthKOp" binding:"required"`
+	ExtraGenesisClaims []*merkletree.Entry `json:"extraGenesisClaims"`
 }
 
 func handlePostIdentity(c *gin.Context) {
-	var newIdentityMsg NewIdentityMsg
-	err := c.BindJSON(&newIdentityMsg)
+	var createIdentityReq CreateIdentityReq
+	err := c.BindJSON(&createIdentityReq)
 	if err != nil {
 		genericserver.Fail(c, "json parsing error", err)
 		return
 	}
 
-	claimKOp, err := core.HexToClaim(newIdentityMsg.ClaimAuthKOpHex)
-	if err != nil {
-		genericserver.Fail(c, "json parsing error", err)
-		return
-	}
-
-	var extraGenesisClaims []merkletree.Claim
-	for _, claimHex := range newIdentityMsg.ExtraGenesisClaimsHex {
-		claim, err := core.HexToClaim(claimHex)
-		if err != nil {
-			genericserver.Fail(c, "json parsing error", err)
-			return
-		}
-		extraGenesisClaims = append(extraGenesisClaims, claim)
-	}
-
-	id, proofKOp, err := ia.NewIdentity(claimKOp, extraGenesisClaims)
+	id, proofKOp, err := ia.NewIdentity(createIdentityReq.ClaimAuthKOp, createIdentityReq.ExtraGenesisClaims)
 	if err != nil {
 		genericserver.Fail(c, "error on NewIdentity, probably Identity already exists", err)
 		return
@@ -54,8 +38,8 @@ func handlePostIdentity(c *gin.Context) {
 	})
 }
 
-type ClaimMsg struct {
-	ClaimHex string `json:"claim"`
+type ClaimReq struct {
+	Claim *merkletree.Entry `json:"claim" binding:"required"`
 }
 
 func handlePostClaim(c *gin.Context) {
@@ -66,20 +50,14 @@ func handlePostClaim(c *gin.Context) {
 		return
 	}
 
-	var claimMsg ClaimMsg
-	err = c.BindJSON(&claimMsg)
+	var claimReq ClaimReq
+	err = c.BindJSON(&claimReq)
 	if err != nil {
 		genericserver.Fail(c, "json parsing error", err)
 		return
 	}
 
-	claim, err := core.HexToClaim(claimMsg.ClaimHex)
-	if err != nil {
-		genericserver.Fail(c, "claim parsing error", err)
-		return
-	}
-
-	err = ia.AddClaim(&id, claim)
+	err = ia.AddClaim(&id, claimReq.Claim)
 	if err != nil {
 		genericserver.Fail(c, "AddClaim error", err)
 		return
@@ -88,8 +66,8 @@ func handlePostClaim(c *gin.Context) {
 	c.JSON(200, gin.H{})
 }
 
-type ClaimsMsg struct {
-	ClaimsHex []string `json:"claims"`
+type ClaimsReq struct {
+	Claims []*merkletree.Entry `json:"claims" binding:"required"`
 }
 
 func handlePostClaims(c *gin.Context) {
@@ -100,19 +78,14 @@ func handlePostClaims(c *gin.Context) {
 		return
 	}
 
-	var claimsMsg ClaimsMsg
-	err = c.BindJSON(&claimsMsg)
+	var claimsReq ClaimsReq
+	err = c.BindJSON(&claimsReq)
 	if err != nil {
 		genericserver.Fail(c, "json parsing error", err)
 		return
 	}
 
-	claims, err := core.HexArrayToClaimArray(claimsMsg.ClaimsHex)
-	if err != nil {
-		genericserver.Fail(c, "claims parsing error", err)
-		return
-	}
-	err = ia.AddClaims(&id, claims)
+	err = ia.AddClaims(&id, claimsReq.Claims)
 	if err != nil {
 		genericserver.Fail(c, "AddClaims error", err)
 		return
