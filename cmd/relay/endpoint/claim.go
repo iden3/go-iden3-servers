@@ -30,41 +30,37 @@ func handleCommitNewIdRoot(c *gin.Context) {
 		return
 	}
 
-	idMsg, err := core.IDFromString(setRootMsg.Id)
-	if err != nil {
-		genericserver.Fail(c, "error on parse setRootMsg.Id", err)
-		return
-	}
-
 	// make sure that the given id from the post url matches with the id from the post data
-	if !bytes.Equal(id.Bytes(), idMsg.Bytes()) {
-		genericserver.Fail(c, "error on PostNewRoot, id not match", errors.New("PostNewRoot id not match"))
+	if !bytes.Equal(id.Bytes(), setRootMsg.Id.Bytes()) {
+		genericserver.Fail(c, "error on CommitNewIdRoot, id not match",
+			errors.New("CommitNewIdRoot id not match"))
 		return
 	}
 	rootBytes, err := common3.HexDecode(setRootMsg.Root)
 	if err != nil {
-		genericserver.Fail(c, "error on PostNewRoot parse root", err)
+		genericserver.Fail(c, "error on CommitNewIdRoot parse root", err)
 		return
 	}
 	var root merkletree.Hash
 	copy(root[:], rootBytes[:32])
 
 	// add the root through genericserver.Claimservice
-	setRootClaim, err := genericserver.Claimservice.CommitNewIdRoot(id, &setRootMsg.KSignPk.PublicKey,
-		root, setRootMsg.Timestamp, setRootMsg.Signature)
+	setRootClaim, err := genericserver.Claimservice.CommitNewIdRoot(id,
+		&setRootMsg.KSignPk.PublicKey, root, setRootMsg.Timestamp, setRootMsg.Signature)
 	if err != nil {
-		genericserver.Fail(c, "error on AddAuthorizeKSignClaim", err)
+		genericserver.Fail(c, "error on CommitNewIdRoot", err)
 		return
 	}
 
-	// return claim with proofs
-	proofRelayClaim, err := genericserver.Claimservice.GetClaimProofByHi(setRootClaim.Entry().HIndex())
-	if err != nil {
-		genericserver.Fail(c, "error on GetClaimByHi", err)
-		return
-	}
+	// Don't return the claim with proof because it uses a Relay root that
+	// is not on the blockchain and may never be there.
+	// proofRelayClaim, err := genericserver.Claimservice.GetClaimProofByHi(setRootClaim.Entry().HIndex())
+	// if err != nil {
+	// 	genericserver.Fail(c, "error on GetClaimByHi", err)
+	// 	return
+	// }
 	c.JSON(200, gin.H{
-		"proofClaim": proofRelayClaim,
+		"setRootClaim": setRootClaim,
 	})
 }
 
@@ -169,6 +165,7 @@ func handleGetClaimProofUserByHi(c *gin.Context) {
 	return
 }
 
+// TODO: Deprecate handleGetClaimProofByHi
 // handleGetClaimProofByHi handles the request to query the claim proof of a
 // relay claim (by hIndex).
 func handleGetClaimProofByHi(c *gin.Context) {
@@ -183,6 +180,28 @@ func handleGetClaimProofByHi(c *gin.Context) {
 	proofClaim, err := genericserver.Claimservice.GetClaimProofByHi(hi)
 	if err != nil {
 		genericserver.Fail(c, "error on GetClaimProofByHi", err)
+		return
+	}
+	c.JSON(200, gin.H{
+		"proofClaim": proofClaim,
+	})
+	return
+}
+
+// handleGetClaimProofByHiBlockchain handles the request to query the claim proof of a
+// relay claim (by hIndex) to a root published in the blockchain.
+func handleGetClaimProofByHiBlockchain(c *gin.Context) {
+	hihex := c.Param("hi")
+	hiBytes, err := common3.HexDecode(hihex)
+	if err != nil {
+		genericserver.Fail(c, "error on HexDecode of Hi", err)
+		return
+	}
+	hi := &merkletree.Hash{}
+	copy(hi[:], hiBytes)
+	proofClaim, err := genericserver.Claimservice.GetClaimProofByHiBlockchain(hi)
+	if err != nil {
+		genericserver.Fail(c, "error on GetClaimProofByHiBlockchain", err)
 		return
 	}
 	c.JSON(200, gin.H{

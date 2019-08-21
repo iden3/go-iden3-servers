@@ -24,7 +24,9 @@ func init() {
 func serveServiceApi() *http.Server {
 	api, serviceapi := genericserver.NewServiceAPI("/api/unstable")
 
-	serviceapi.GET("/claims/:hi/proof", handleGetClaimProofByHi) // Get relay claim proof
+	// TODO: Deprecate handleGetClaimProofByHi
+	serviceapi.GET("/claims/:hi/proof", handleGetClaimProofByHi)            // Get relay claim proof
+	serviceapi.GET("/claims/:hi/proof0", handleGetClaimProofByHiBlockchain) // Get relay claim proof (to Blockchain)
 
 	serviceapi.POST("/ids", handleCreateIdGenesis)
 	serviceapi.POST("/counterfactuals", handleCreateCounterfactual)
