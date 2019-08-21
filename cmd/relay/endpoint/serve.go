@@ -25,7 +25,8 @@ func serveServiceApi() *http.Server {
 	api, serviceapi := genericserver.NewServiceAPI("/api/unstable")
 
 	// TODO: Deprecate handleGetClaimProofByHi
-	serviceapi.GET("/claims/:hi/proof", handleGetClaimProofByHi)            // Get relay claim proof
+	serviceapi.GET("/claims/:hi/proof", handleGetClaimProofByHi) // Get relay claim proof
+	// NEW Agent API
 	serviceapi.GET("/claims/:hi/proof0", handleGetClaimProofByHiBlockchain) // Get relay claim proof (to Blockchain)
 
 	serviceapi.POST("/ids", handleCreateIdGenesis)
@@ -33,7 +34,11 @@ func serveServiceApi() *http.Server {
 	serviceapi.GET("/counterfactuals/:ethaddr", handleGetCounterfactual)
 	serviceapi.POST("/counterfactuals/:ethaddr/deploy", handleDeployCounterfactual)
 	serviceapi.POST("/counterfactuals/:ethaddr/forward", handleForwardCounterfactual)
+	// NEW Agent API
+	serviceapi.GET("/ids/:id/setrootclaim", handleGetSetRootClaim)
 	serviceapi.GET("/ids/:id/root", handleGetIdRoot)
+	// NEW Agent API
+	serviceapi.POST("/ids/:id/setrootclaim", handleUpdateSetRootClaim)
 	serviceapi.POST("/ids/:id/root", handleCommitNewIdRoot)
 	serviceapi.POST("/ids/:id/claims", handlePostClaim)
 	serviceapi.GET("/ids/:id/claims/:hi/proof", handleGetClaimProofUserByHi) // Get user claim proof

@@ -8,6 +8,7 @@ import (
 	common3 "github.com/iden3/go-iden3-core/common"
 	"github.com/iden3/go-iden3-core/core"
 	"github.com/iden3/go-iden3-core/services/claimsrv"
+	"github.com/iden3/go-iden3-crypto/babyjub"
 	"github.com/iden3/go-iden3-servers/cmd/genericserver"
 
 	"github.com/iden3/go-iden3-core/merkletree"
@@ -36,17 +37,10 @@ func handleCommitNewIdRoot(c *gin.Context) {
 			errors.New("CommitNewIdRoot id not match"))
 		return
 	}
-	rootBytes, err := common3.HexDecode(setRootMsg.Root)
-	if err != nil {
-		genericserver.Fail(c, "error on CommitNewIdRoot parse root", err)
-		return
-	}
-	var root merkletree.Hash
-	copy(root[:], rootBytes[:32])
 
 	// add the root through genericserver.Claimservice
 	setRootClaim, err := genericserver.Claimservice.CommitNewIdRoot(id,
-		&setRootMsg.KSignPk.PublicKey, root, setRootMsg.Timestamp, setRootMsg.Signature)
+		&setRootMsg.KSignPk.PublicKey, *setRootMsg.Root, setRootMsg.Timestamp, setRootMsg.Signature)
 	if err != nil {
 		genericserver.Fail(c, "error on CommitNewIdRoot", err)
 		return
@@ -61,6 +55,51 @@ func handleCommitNewIdRoot(c *gin.Context) {
 	// }
 	c.JSON(200, gin.H{
 		"setRootClaim": setRootClaim,
+	})
+}
+
+// SetRoot0Req contains the data to set the SetRootClaim
+type SetRoot0Req struct {
+	Root     *merkletree.Hash        `json:"root" binding:"required"`
+	ProofKOp *core.ProofClaimGenesis `json:"proofkop" binding:"required,dive"`
+	// TODO: Use date in the signature and define a protection against reply attacks
+	Date      int64                  `json:"date" binding:"required"`
+	Signature *babyjub.SignatureComp `json:"signature" binding:"required"` // signature of the Root
+}
+
+// handleUpdateSetRootClaim handles a request to add a new set root claim to the relay.
+func handleUpdateSetRootClaim(c *gin.Context) {
+	idHex := c.Param("id")
+	id, err := core.IDFromString(idHex)
+	if err != nil {
+		genericserver.Fail(c, "error on parse id", err)
+		return
+	}
+
+	var setRootReq SetRoot0Req
+	err = c.BindJSON(&setRootReq)
+	if err != nil {
+		genericserver.Fail(c, "json parsing error", err)
+		return
+	}
+
+	// make sure that the given id from the post url matches with the id from the post data
+	if !id.Equal(setRootReq.ProofKOp.Id) {
+		genericserver.Fail(c, "error on handleUpdateSetRootClaim, id not match with genesis proof",
+			errors.New("handleUpdateSetRootClaim id not match with genesis proof"))
+		return
+	}
+
+	// add the root through genericserver.Claimservice
+	setRootClaim, err := genericserver.Claimservice.UpdateSetRootClaim(&id,
+		setRootReq.Root, setRootReq.ProofKOp, setRootReq.Date, setRootReq.Signature)
+	if err != nil {
+		genericserver.Fail(c, "error on UpdateSetRootClaim", err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"setRootClaim": setRootClaim.Entry(),
 	})
 }
 
@@ -135,6 +174,26 @@ func handleGetIdRoot(c *gin.Context) {
 		"proofIdRoot": common3.HexEncode(idRootProof),                  // user id root proof in the relay merkletree
 	})
 	return
+}
+
+// handleGetSetRootClaim handles a request to query the last SetRootKey claim
+// of an id with a proof to the root in the blockchain.
+func handleGetSetRootClaim(c *gin.Context) {
+	idHex := c.Param("id")
+	id, err := core.IDFromString(idHex)
+	if err != nil {
+		genericserver.Fail(c, "error on parse id", err)
+		return
+	}
+
+	proofClaim, err := genericserver.Claimservice.GetSetRootClaim(id)
+	if err != nil {
+		genericserver.Fail(c, "error on GetClaimProofByHiBlockchain", err)
+		return
+	}
+	c.JSON(200, gin.H{
+		"proofClaim": proofClaim,
+	})
 }
 
 // handleGetClaimProofUserByHi handles the request to query the claim proof of
