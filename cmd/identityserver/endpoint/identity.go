@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/iden3/go-iden3-core/core"
 	"github.com/iden3/go-iden3-core/merkletree"
+	"github.com/iden3/go-iden3-core/services/claimsrv"
 	"github.com/iden3/go-iden3-core/services/identityagentsrv"
 	"github.com/iden3/go-iden3-servers/cmd/genericserver"
 )
@@ -105,15 +106,43 @@ func handlePostClaims(c *gin.Context) {
 	c.JSON(200, gin.H{})
 }
 
-func handleGetAllReceivedClaims(c *gin.Context) {
+func handleGetRoot(c *gin.Context) {
+	agent := loadAgent(c)
+	if agent == nil {
+		return
+	}
+	c.JSON(200, gin.H{
+		"root": agent.GetCurrentRoot(),
+	})
+}
+
+func handlePostRoot(c *gin.Context) {
+	agent := loadAgent(c)
+	if agent == nil {
+		return
+	}
+	var setRootReq claimsrv.SetRoot0Req
+	err := c.ShouldBindJSON(&setRootReq)
+	if err != nil {
+		genericserver.Fail(c, "json parsing error", err)
+		return
+	}
+	if err := agent.RootUpdate(setRootReq); err != nil {
+		genericserver.Fail(c, "RootUpdate error", err)
+		return
+	}
+	c.JSON(200, gin.H{})
+}
+
+func handleGetClaimsReceived(c *gin.Context) {
 	agent := loadAgent(c)
 	if agent == nil {
 		return
 	}
 
-	claims, err := agent.GetAllReceivedClaims()
+	claims, err := agent.ClaimsReceived()
 	if err != nil {
-		genericserver.Fail(c, "GetAllReceivedClaims error", err)
+		genericserver.Fail(c, "ClaimsReceived error", err)
 		return
 	}
 	c.JSON(200, gin.H{
@@ -121,15 +150,15 @@ func handleGetAllReceivedClaims(c *gin.Context) {
 	})
 }
 
-func handleGetAllEmittedClaims(c *gin.Context) {
+func handleGetClaimsEmitted(c *gin.Context) {
 	agent := loadAgent(c)
 	if agent == nil {
 		return
 	}
 
-	claims, err := agent.GetAllEmittedClaims()
+	claims, err := agent.ClaimsEmitted()
 	if err != nil {
-		genericserver.Fail(c, "GetAllEmittedClaims error", err)
+		genericserver.Fail(c, "ClaimsEmitted error", err)
 		return
 	}
 	c.JSON(200, gin.H{
@@ -137,15 +166,31 @@ func handleGetAllEmittedClaims(c *gin.Context) {
 	})
 }
 
-func handleGetFullMT(c *gin.Context) {
+func handleGetClaimsGenesis(c *gin.Context) {
 	agent := loadAgent(c)
 	if agent == nil {
 		return
 	}
 
-	mt, err := agent.GetFullMT()
+	claims, err := agent.ClaimsGenesis()
 	if err != nil {
-		genericserver.Fail(c, "GetFullMT error", err)
+		genericserver.Fail(c, "ClaimsGenesis error", err)
+		return
+	}
+	c.JSON(200, gin.H{
+		"genesisClaims": claims,
+	})
+}
+
+func handleGetMT(c *gin.Context) {
+	agent := loadAgent(c)
+	if agent == nil {
+		return
+	}
+
+	mt, err := agent.ExportMT()
+	if err != nil {
+		genericserver.Fail(c, "ExportMT error", err)
 		return
 	}
 	c.JSON(200, gin.H{
