@@ -36,9 +36,9 @@ func serveServiceApi() *http.Server {
 	serviceapi.POST("/counterfactuals/:ethaddr/forward", handleForwardCounterfactual)
 	// NEW Agent API
 	serviceapi.GET("/ids/:id/setrootclaim", handleGetSetRootClaim)
-	serviceapi.GET("/ids/:id/root", handleGetIdRoot)
 	// NEW Agent API
 	serviceapi.POST("/ids/:id/setrootclaim", handleUpdateSetRootClaim)
+	serviceapi.GET("/ids/:id/root", handleGetIdRoot)
 	serviceapi.POST("/ids/:id/root", handleCommitNewIdRoot)
 	serviceapi.POST("/ids/:id/claims", handlePostClaim)
 	serviceapi.GET("/ids/:id/claims/:hi/proof", handleGetClaimProofUserByHi) // Get user claim proof

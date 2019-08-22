@@ -8,7 +8,6 @@ import (
 	common3 "github.com/iden3/go-iden3-core/common"
 	"github.com/iden3/go-iden3-core/core"
 	"github.com/iden3/go-iden3-core/services/claimsrv"
-	"github.com/iden3/go-iden3-crypto/babyjub"
 	"github.com/iden3/go-iden3-servers/cmd/genericserver"
 
 	"github.com/iden3/go-iden3-core/merkletree"
@@ -58,15 +57,6 @@ func handleCommitNewIdRoot(c *gin.Context) {
 	})
 }
 
-// SetRoot0Req contains the data to set the SetRootClaim
-type SetRoot0Req struct {
-	Root     *merkletree.Hash        `json:"root" binding:"required"`
-	ProofKOp *core.ProofClaimGenesis `json:"proofkop" binding:"required,dive"`
-	// TODO: Use date in the signature and define a protection against reply attacks
-	Date      int64                  `json:"date" binding:"required"`
-	Signature *babyjub.SignatureComp `json:"signature" binding:"required"` // signature of the Root
-}
-
 // handleUpdateSetRootClaim handles a request to add a new set root claim to the relay.
 func handleUpdateSetRootClaim(c *gin.Context) {
 	idHex := c.Param("id")
@@ -76,7 +66,7 @@ func handleUpdateSetRootClaim(c *gin.Context) {
 		return
 	}
 
-	var setRootReq SetRoot0Req
+	var setRootReq claimsrv.SetRoot0Req
 	err = c.BindJSON(&setRootReq)
 	if err != nil {
 		genericserver.Fail(c, "json parsing error", err)
