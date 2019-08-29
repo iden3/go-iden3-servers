@@ -35,13 +35,9 @@ func handlePostIdentity(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{
-		"id":         id.String(),
-		"proofOkKey": proofKOp,
+		"id":       id.String(),
+		"proofKOp": proofKOp,
 	})
-}
-
-type ClaimReq struct {
-	Claim *merkletree.Entry `json:"claim" binding:"required"`
 }
 
 func loadAgent(c *gin.Context) *identityagentsrv.Agent {
@@ -56,28 +52,6 @@ func loadAgent(c *gin.Context) *identityagentsrv.Agent {
 		return nil
 	}
 	return agent
-}
-
-func handlePostClaim(c *gin.Context) {
-	agent := loadAgent(c)
-	if agent == nil {
-		return
-	}
-
-	var claimReq ClaimReq
-	err := c.ShouldBindJSON(&claimReq)
-	if err != nil {
-		genericserver.Fail(c, "json parsing error", err)
-		return
-	}
-
-	err = agent.AddClaim(claimReq.Claim)
-	if err != nil {
-		genericserver.Fail(c, "AddClaim error", err)
-		return
-	}
-
-	c.JSON(200, gin.H{})
 }
 
 type ClaimsReq struct {
@@ -111,8 +85,13 @@ func handleGetRoot(c *gin.Context) {
 	if agent == nil {
 		return
 	}
+	currentRoot, err := agent.GetCurrentRoot()
+	if err != nil {
+		genericserver.Fail(c, "GetCurrentRoot error", err)
+		return
+	}
 	c.JSON(200, gin.H{
-		"root": agent.GetCurrentRoot(),
+		"currentRoot": currentRoot,
 	})
 }
 
