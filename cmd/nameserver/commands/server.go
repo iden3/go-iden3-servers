@@ -65,14 +65,15 @@ func cmdStart(c *cli.Context) error {
 	}
 	client := genericserver.LoadWeb3(ks, &acc)
 	client2 := genericserver.LoadEthClient2(ks, &acc)
+	ethsrv := genericserver.LoadEthService(client2)
 	storage := genericserver.LoadStorage()
 	defer storage.Close()
 	mt := genericserver.LoadMerkele(storage)
 
 	proofClaims := genericserver.LoadGenesis(mt)
-	kUpdateMtp := proofClaims.KUpdateRoot.Proofs[0].Mtp0.Bytes()
+	kUpdateMtp := proofClaims.KUpdateRoot.Proof.Mtp0.Bytes()
 
-	rootService := genericserver.LoadRootsService(client2, kUpdateMtp)
+	rootService := genericserver.LoadRootsService(ethsrv, kUpdateMtp)
 	claimService := genericserver.LoadClaimService(mt, rootService, ksBaby, pk)
 	nameService := LoadNameService(claimService, ksBaby, *pk, genericserver.C.Domain, genericserver.C.Namespace)
 	adminService := genericserver.LoadAdminService(mt, rootService, claimService)
@@ -84,7 +85,7 @@ func cmdStart(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	signedPacketVerifier := signedpacketsrv.NewSignedPacketVerifier(discoveryService, nameResolveService)
+	signedPacketVerifier := signedpacketsrv.NewSignedPacketVerifier(discoveryService, nameResolveService, ethsrv)
 
 	// Check for founds
 	balance, err := client.BalanceAt(acc.Address)
@@ -151,7 +152,7 @@ func cmdInfo(c *cli.Context) error {
 	return err
 }
 
-func LoadNameService(claimservice claimsrv.Service, ks *babykeystore.KeyStore, pk babyjub.PublicKey, domain string, namespace string) namesrv.Service {
+func LoadNameService(claimservice *claimsrv.Service, ks *babykeystore.KeyStore, pk babyjub.PublicKey, domain string, namespace string) namesrv.Service {
 	signer := signsrv.New(ks, pk)
 	return namesrv.New(claimservice, *signer, domain)
 }

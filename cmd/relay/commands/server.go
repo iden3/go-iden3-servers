@@ -55,17 +55,18 @@ func cmdStart(c *cli.Context) error {
 	}
 	client := genericserver.LoadWeb3(ks, &acc)
 	client2 := genericserver.LoadEthClient2(ks, &acc)
+	ethsrv := genericserver.LoadEthService(client2)
 	storage := genericserver.LoadStorage()
 	defer storage.Close()
 	mt := genericserver.LoadMerkele(storage)
 
 	proofClaims := genericserver.LoadGenesis(mt)
-	kUpdateMtp := proofClaims.KUpdateRoot.Proofs[0].Mtp0.Bytes()
+	kUpdateMtp := proofClaims.KUpdateRoot.Proof.Mtp0.Bytes()
 
-	rootService := genericserver.LoadRootsService(client2, kUpdateMtp)
+	rootService := genericserver.LoadRootsService(ethsrv, kUpdateMtp)
 	claimService := genericserver.LoadClaimService(mt, rootService, ksBaby, pk)
 	idService := genericserver.LoadIdentityService(claimService)
-	counterfactualService := genericserver.LoadCounterfactualService(client, claimService, storage)
+	// counterfactualService := genericserver.LoadCounterfactualService(client, claimService, storage)
 	adminService := genericserver.LoadAdminService(mt, rootService, claimService)
 
 	// Check for funds
@@ -81,7 +82,7 @@ func cmdStart(c *cli.Context) error {
 		log.Panic("Not enough funds in the relay address")
 	}
 
-	endpoint.Serve(rootService, claimService, idService, counterfactualService, adminService)
+	endpoint.Serve(rootService, claimService, idService, adminService)
 
 	rootService.StopAndJoin()
 

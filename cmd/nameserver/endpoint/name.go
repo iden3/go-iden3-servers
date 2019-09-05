@@ -28,9 +28,9 @@ func handleVinculateId(c *gin.Context) {
 	}
 
 	// return claim with proofs
-	proofClaimAssignName, err := claimService.GetClaimProofByHi(claimAssignName.Entry().HIndex())
+	proofClaimAssignName, err := claimService.GetClaimProofByHiBlockchain(claimAssignName.Entry().HIndex())
 	if err != nil {
-		genericserver.Fail(c, "error on GetClaimByHi", err)
+		genericserver.Fail(c, "error on GetClaimByHiBlockchain", err)
 		return
 	}
 	c.JSON(200, gin.H{
@@ -48,9 +48,9 @@ func handleClaimAssignNameResolv(c *gin.Context) {
 		return
 	}
 
-	proofClaimAssignName, err := claimService.GetClaimProofByHi(claimAssignName.Entry().HIndex())
+	proofClaimAssignName, err := claimService.GetClaimProofByHiBlockchain(claimAssignName.Entry().HIndex())
 	if err != nil {
-		genericserver.Fail(c, "error on GetClaimByHi", err)
+		genericserver.Fail(c, "error on GetClaimByHiBlockchain", err)
 		return
 	}
 	c.JSON(200, gin.H{

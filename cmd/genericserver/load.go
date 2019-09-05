@@ -18,7 +18,8 @@ import (
 	"github.com/iden3/go-iden3-core/merkletree"
 	"github.com/iden3/go-iden3-core/services/adminsrv"
 	"github.com/iden3/go-iden3-core/services/claimsrv"
-	"github.com/iden3/go-iden3-core/services/counterfactualsrv"
+	// "github.com/iden3/go-iden3-core/services/counterfactualsrv"
+	"github.com/iden3/go-iden3-core/services/ethsrv"
 	"github.com/iden3/go-iden3-core/services/identitysrv"
 	"github.com/iden3/go-iden3-core/services/rootsrv"
 	"github.com/iden3/go-iden3-core/services/signedpacketsrv"
@@ -44,10 +45,11 @@ func Assert(msg string, err error) {
 	}
 }
 
-var Claimservice claimsrv.Service
+var Claimservice *claimsrv.Service
 var Rootservice rootsrv.Service
-var Idservice identitysrv.Service
-var Counterfactualservice counterfactualsrv.Service
+var Idservice *identitysrv.Service
+
+// var Counterfactualservice counterfactualsrv.Service
 var Adminservice adminsrv.Service
 
 var SignedPacketService signedpacketsrv.SignedPacketSigner
@@ -126,6 +128,13 @@ func LoadEthClient2(ks *ethkeystore.KeyStore, acc *accounts.Account) *eth.Client
 	return eth.NewClient2(client, acc, ks)
 }
 
+func LoadEthService(client *eth.Client2) ethsrv.Service {
+	addresses := ethsrv.ContractAddresses{
+		RootCommits: common.HexToAddress(C.Contracts.RootCommits.Address),
+	}
+	return ethsrv.New(client, addresses)
+}
+
 func LoadWeb3(ks *ethkeystore.KeyStore, acc *accounts.Account) *eth.Web3Client {
 	// Create geth client
 	url := C.Web3.Url
@@ -175,53 +184,54 @@ func LoadContract(client eth.Client, jsonabifile string, address *string) *eth.C
 	return eth.NewContract(client, abi, code, addrPtr)
 }
 
-func LoadRootsService(client *eth.Client2, kUpdateRootMtp []byte) rootsrv.Service {
+func LoadRootsService(ethSrv ethsrv.Service, kUpdateRootMtp []byte) rootsrv.Service {
 	return rootsrv.New(
-		client,
+		ethSrv,
 		&C.Id,
 		kUpdateRootMtp,
 		common.HexToAddress(C.Contracts.RootCommits.Address),
 	)
 }
 
-func LoadIdentityService(claimservice claimsrv.Service) identitysrv.Service {
+func LoadIdentityService(claimservice *claimsrv.Service) *identitysrv.Service {
 	return identitysrv.New(claimservice)
 }
 
-func LoadCounterfactualService(client *eth.Web3Client, claimservice claimsrv.Service, storage db.Storage) counterfactualsrv.Service {
+// DEPRECATED
+// func LoadCounterfactualService(client *eth.Web3Client, claimservice *claimsrv.Service, storage db.Storage) counterfactualsrv.Service {
+//
+// 	counterfactualstorage := storage.WithPrefix(dbCounterfactualPrefix)
+//
+// 	deployerContract := LoadContract(
+// 		client,
+// 		C.Contracts.Iden3Deployer.JsonABI,
+// 		&C.Contracts.Iden3Deployer.Address)
+//
+// 	implContract := LoadContract(
+// 		client,
+// 		C.Contracts.Iden3Impl.JsonABI,
+// 		&C.Contracts.Iden3Impl.Address)
+//
+// 	proxyContract := LoadContract(
+// 		client,
+// 		C.Contracts.Iden3Proxy.JsonABI,
+// 		nil)
+//
+// 	return counterfactualsrv.New(deployerContract, implContract, proxyContract, claimservice, counterfactualstorage)
+// }
 
-	counterfactualstorage := storage.WithPrefix(dbCounterfactualPrefix)
-
-	deployerContract := LoadContract(
-		client,
-		C.Contracts.Iden3Deployer.JsonABI,
-		&C.Contracts.Iden3Deployer.Address)
-
-	implContract := LoadContract(
-		client,
-		C.Contracts.Iden3Impl.JsonABI,
-		&C.Contracts.Iden3Impl.Address)
-
-	proxyContract := LoadContract(
-		client,
-		C.Contracts.Iden3Proxy.JsonABI,
-		nil)
-
-	return counterfactualsrv.New(deployerContract, implContract, proxyContract, claimservice, counterfactualstorage)
-}
-
-func LoadClaimService(mt *merkletree.MerkleTree, rootservice rootsrv.Service, ks *babykeystore.KeyStore, pk *babyjub.PublicKey) claimsrv.Service {
+func LoadClaimService(mt *merkletree.MerkleTree, rootservice rootsrv.Service, ks *babykeystore.KeyStore, pk *babyjub.PublicKey) *claimsrv.Service {
 	log.WithField("id", C.Id.String()).Info("Running claim service")
 	signer := signsrv.New(ks, *pk)
-	return claimsrv.New(C.Id, mt, rootservice, *signer)
+	return claimsrv.New(&C.Id, mt, rootservice, *signer)
 }
 
-func LoadAdminService(mt *merkletree.MerkleTree, rootservice rootsrv.Service, claimservice claimsrv.Service) adminsrv.Service {
+func LoadAdminService(mt *merkletree.MerkleTree, rootservice rootsrv.Service, claimservice *claimsrv.Service) adminsrv.Service {
 	return adminsrv.New(mt, rootservice, claimservice)
 }
 
 // LoadSignedPacketSigner Adds new claim authorizing a secp256ks key. Returns SignedPacketSigner to sign with key sign.
-func LoadSignedPacketSigner(ks *babykeystore.KeyStore, pk *babyjub.PublicKey, claimservice claimsrv.Service) *signedpacketsrv.SignedPacketSigner {
+func LoadSignedPacketSigner(ks *babykeystore.KeyStore, pk *babyjub.PublicKey, claimservice *claimsrv.Service) *signedpacketsrv.SignedPacketSigner {
 	// Create signer object
 	signer := signsrv.New(ks, *pk)
 	// Claim authorizing public key baby jub and get its proofKsign
@@ -232,7 +242,7 @@ func LoadSignedPacketSigner(ks *babykeystore.KeyStore, pk *babyjub.PublicKey, cl
 		panic(err)
 	}
 	// return claim with proofs
-	proofKSign, err := claimservice.GetClaimProofByHi(claim.Entry().HIndex())
+	proofKSign, err := claimservice.GetClaimProofByHiBlockchain(claim.Entry().HIndex())
 	if err != nil {
 		panic(err)
 	}
@@ -265,7 +275,7 @@ func LoadGenesis(mt *merkletree.MerkleTree) *core.GenesisProofClaims {
 		// Add genesis claims to merkle tree
 		log.WithField("root", root.Hex()).Info("Merkle tree is empty")
 		for _, proofClaim := range proofClaimsList {
-			if err := mt.Add(&merkletree.Entry{Data: *proofClaim.Leaf}); err != nil {
+			if err := mt.Add(proofClaim.Claim); err != nil {
 				Assert("Error adding claim to merkle tree", err)
 			}
 		}
@@ -274,7 +284,7 @@ func LoadGenesis(mt *merkletree.MerkleTree) *core.GenesisProofClaims {
 		// Check that the geneiss claims are in the merkle tree
 		log.WithField("root", root.Hex()).Info("Merkle tree already initialized")
 		for _, proofClaim := range proofClaimsList {
-			entry := merkletree.Entry{Data: *proofClaim.Leaf}
+			entry := proofClaim.Claim
 			data, err := mt.GetDataByIndex(entry.HIndex())
 			if err != nil {
 				Assert("Error getting claim from the merkle tree", err)

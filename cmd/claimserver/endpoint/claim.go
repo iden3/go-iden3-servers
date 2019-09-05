@@ -80,7 +80,7 @@ func handlePostClaim(c *gin.Context) {
 	}
 
 	// return claim with proofs.
-	proofClaim, err := genericserver.Claimservice.GetClaimProofByHi(claim.Entry().HIndex())
+	proofClaim, err := genericserver.Claimservice.GetClaimProofByHiBlockchain(claim.Entry().HIndex())
 	if err != nil {
 		genericserver.Fail(c, "error on GetClaimProofByHi", err)
 		return
@@ -114,7 +114,7 @@ func handleGetClaimProofByHi(c *gin.Context) {
 	}
 	hi := &merkletree.Hash{}
 	copy(hi[:], hiBytes)
-	proofOfClaim, err := genericserver.Claimservice.GetClaimProofByHi(hi)
+	proofOfClaim, err := genericserver.Claimservice.GetClaimProofByHiBlockchain(hi)
 	if err != nil {
 		genericserver.Fail(c, "error on GetClaimProofByHi", err)
 		return

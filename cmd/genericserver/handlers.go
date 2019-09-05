@@ -32,7 +32,7 @@ func HandleGetRoot(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{
 		"root":         Claimservice.MT().RootKey().Hex(),
-		"contractRoot": common3.HexEncode(root[:]),
+		"contractRoot": common3.HexEncode(root.Root[:]),
 	})
 }
 

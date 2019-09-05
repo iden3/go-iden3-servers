@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/iden3/go-iden3-core/services/adminsrv"
 	"github.com/iden3/go-iden3-core/services/claimsrv"
-	"github.com/iden3/go-iden3-core/services/counterfactualsrv"
+	// "github.com/iden3/go-iden3-core/services/counterfactualsrv"
 	"github.com/iden3/go-iden3-core/services/identitysrv"
 	"github.com/iden3/go-iden3-core/services/rootsrv"
 	"github.com/iden3/go-iden3-servers/cmd/genericserver"
@@ -25,23 +25,30 @@ func serveServiceApi() *http.Server {
 	api, serviceapi := genericserver.NewServiceAPI("/api/unstable")
 
 	// TODO: Deprecate handleGetClaimProofByHi
-	serviceapi.GET("/claims/:hi/proof", handleGetClaimProofByHi) // Get relay claim proof
+	// DEPRECATED
+	// serviceapi.GET("/claims/:hi/proof", handleGetClaimProofByHi) // Get relay claim proof
 	// NEW Agent API
 	serviceapi.GET("/claims/:hi/proof0", handleGetClaimProofByHiBlockchain) // Get relay claim proof (to Blockchain)
 
 	serviceapi.POST("/ids", handleCreateIdGenesis)
-	serviceapi.POST("/counterfactuals", handleCreateCounterfactual)
-	serviceapi.GET("/counterfactuals/:ethaddr", handleGetCounterfactual)
-	serviceapi.POST("/counterfactuals/:ethaddr/deploy", handleDeployCounterfactual)
-	serviceapi.POST("/counterfactuals/:ethaddr/forward", handleForwardCounterfactual)
+	// DEPRECATED
+	// serviceapi.POST("/counterfactuals", handleCreateCounterfactual)
+	// DEPRECATED
+	// serviceapi.GET("/counterfactuals/:ethaddr", handleGetCounterfactual)
+	// DEPRECATED
+	// serviceapi.POST("/counterfactuals/:ethaddr/deploy", handleDeployCounterfactual)
+	// DEPRECATED
+	// serviceapi.POST("/counterfactuals/:ethaddr/forward", handleForwardCounterfactual)
 	// NEW Agent API
 	serviceapi.GET("/ids/:id/setrootclaim", handleGetSetRootClaim)
 	// NEW Agent API
 	serviceapi.POST("/ids/:id/setrootclaim", handleUpdateSetRootClaim)
 	serviceapi.GET("/ids/:id/root", handleGetIdRoot)
 	serviceapi.POST("/ids/:id/root", handleCommitNewIdRoot)
-	serviceapi.POST("/ids/:id/claims", handlePostClaim)
-	serviceapi.GET("/ids/:id/claims/:hi/proof", handleGetClaimProofUserByHi) // Get user claim proof
+	// DEPRECATED
+	// serviceapi.POST("/ids/:id/claims", handlePostClaim)
+	// DEPRECATED
+	// serviceapi.GET("/ids/:id/claims/:hi/proof", handleGetClaimProofUserByHi) // Get user claim proof
 
 	serviceapisrv := &http.Server{Addr: genericserver.C.Server.ServiceApi, Handler: api}
 	go func() {
@@ -56,7 +63,8 @@ func serveServiceApi() *http.Server {
 func serveAdminApi(stopch chan interface{}) *http.Server {
 	api, adminapi := genericserver.NewAdminAPI("/api/unstable", stopch)
 	adminapi.POST("/mimc7", handleMimc7)
-	adminapi.POST("/claims/basic", handleAddClaimBasic)
+	// DEPRECATED
+	// adminapi.POST("/claims/basic", handleAddClaimBasic)
 
 	adminapisrv := &http.Server{Addr: genericserver.C.Server.AdminApi, Handler: api}
 	go func() {
@@ -68,10 +76,10 @@ func serveAdminApi(stopch chan interface{}) *http.Server {
 	return adminapisrv
 }
 
-func Serve(rs rootsrv.Service, cs claimsrv.Service, ids identitysrv.Service, counterfs counterfactualsrv.Service, as adminsrv.Service) {
+func Serve(rs rootsrv.Service, cs *claimsrv.Service, ids *identitysrv.Service, as adminsrv.Service) {
 
 	genericserver.Idservice = ids
-	genericserver.Counterfactualservice = counterfs
+	// genericserver.Counterfactualservice = counterfs
 	genericserver.Claimservice = cs
 	genericserver.Rootservice = rs
 	genericserver.Adminservice = as

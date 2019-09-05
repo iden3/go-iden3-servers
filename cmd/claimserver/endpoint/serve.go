@@ -39,7 +39,11 @@ func serveServiceApi() *http.Server {
 // serveAdminApi start admin api calls.
 func serveAdminApi(stopch chan interface{}) *http.Server {
 	api, adminapi := genericserver.NewAdminAPI("/api/unstable", stopch)
-	adminapi.POST("/claims/basic", handleAddClaimBasic)
+	if adminapi == nil {
+		println("IGNORE ME")
+	}
+	// DEPRECATED
+	// adminapi.POST("/claims/basic", handleAddClaimBasic)
 
 	adminapisrv := &http.Server{Addr: genericserver.C.Server.AdminApi, Handler: api}
 	go func() {
@@ -52,7 +56,7 @@ func serveAdminApi(stopch chan interface{}) *http.Server {
 }
 
 // Serve initilization all services and its corresponding api calls.
-func Serve(rs rootsrv.Service, cs claimsrv.Service, as adminsrv.Service, sp *signedpacketsrv.SignedPacketSigner) {
+func Serve(rs rootsrv.Service, cs *claimsrv.Service, as adminsrv.Service, sp *signedpacketsrv.SignedPacketSigner) {
 
 	genericserver.Claimservice = cs
 	genericserver.Rootservice = rs

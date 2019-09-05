@@ -20,7 +20,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var claimService claimsrv.Service
+var claimService *claimsrv.Service
 var rootService rootsrv.Service
 var nameService namesrv.Service
 var signedPacketVerifier signedpacketsrv.SignedPacketVerifier
@@ -39,7 +39,7 @@ func handleGetRoot(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{
 		"root":         claimService.MT().RootKey().Hex(),
-		"contractRoot": common3.HexEncode(root[:]),
+		"contractRoot": common3.HexEncode(root.Root[:]),
 	})
 }
 
@@ -71,7 +71,7 @@ func serveAdminApi(stopch chan interface{}) *http.Server {
 	return adminapisrv
 }
 
-func Serve(rs rootsrv.Service, cs claimsrv.Service, ns namesrv.Service,
+func Serve(rs rootsrv.Service, cs *claimsrv.Service, ns namesrv.Service,
 	spv signedpacketsrv.SignedPacketVerifier, as adminsrv.Service) {
 
 	claimService = cs

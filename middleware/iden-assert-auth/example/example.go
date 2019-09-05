@@ -4,10 +4,13 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
 	common3 "github.com/iden3/go-iden3-core/common"
 	"github.com/iden3/go-iden3-core/core"
+	"github.com/iden3/go-iden3-core/eth"
 	"github.com/iden3/go-iden3-core/services/discoverysrv"
+	"github.com/iden3/go-iden3-core/services/ethsrv"
 	"github.com/iden3/go-iden3-core/services/nameresolversrv"
 	"github.com/iden3/go-iden3-core/services/signedpacketsrv"
 	"github.com/iden3/go-iden3-servers/middleware/iden-assert-auth"
@@ -34,11 +37,16 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	discoveryservice, err := discoverysrv.New("/tmp/go-iden3/identitites.json")
+	discoveryService, err := discoverysrv.New("/tmp/go-iden3/identitites.json")
 	if err != nil {
 		log.Fatal(err)
 	}
-	signedPacketVerifier := signedpacketsrv.NewSignedPacketVerifier(discoveryservice, nameResolverService)
+	// Example ethereum client that won't work because it doesn't use any keystore nor gateway
+	client := eth.NewClient2(nil, nil, nil)
+	ethService := ethsrv.New(client, ethsrv.ContractAddresses{
+		RootCommits: common.HexToAddress("0xAF8DC5663cf3890DF4E236cdA0718f4ecB8b42f5")},
+	)
+	signedPacketVerifier := signedpacketsrv.NewSignedPacketVerifier(discoveryService, nameResolverService, ethService)
 	authapi, err := auth.AddAuthMiddleware(&r.RouterGroup, domain, nonceDb, []byte("password"),
 		signedPacketVerifier)
 	if err != nil {
