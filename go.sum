@@ -7,6 +7,7 @@ github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuy
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/allegro/bigcache v1.2.1 h1:hg1sY1raCwic3Vnsvje6TT7/pnZba83LeFck5NrFKSc=
 github.com/allegro/bigcache v1.2.1/go.mod h1:Cb/ax3seSYIx7SuZdm2G2xzfwmv3TPSk2ucNfQESPXM=
+github.com/apilayer/freegeoip v3.5.0+incompatible/go.mod h1:CUfFqErhFhXneJendyQ/rRcuA8kH8JxHvYnbOozmlCU=
 github.com/appleboy/gin-jwt/v2 v2.6.2 h1:aW8jd9Zt5lU5W18GvLMO3/T9O8DETfW3O7GzGxcL6So=
 github.com/appleboy/gin-jwt/v2 v2.6.2/go.mod h1:fPyTIp4l5gtQnThEGuMBzCcfvMVSs9dsfrZlXsaTJMY=
 github.com/appleboy/gofight/v2 v2.1.1/go.mod h1:6E7pthKhmwss84j/zEixBNim8Q6ahhHcYOtmW5ts5vA=
@@ -63,6 +64,7 @@ github.com/dghubble/sling v1.3.0/go.mod h1:XXShWaBWKzNLhu2OxikSNFrlsvowtz4kyRuXU
 github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8PWV+bWy6jNmig1y/TA+kYO4g3RSRF0IAv0no=
+github.com/docker/docker v1.13.1/go.mod h1:eEKB0N0r5NX/I1kEveEz05bcu8tLC/8azJZsviup8Sk=
 github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712 h1:aaQcKT9WumO6JEJcRyTqFVq4XUZiUcKR2/GI31TOcz8=
 github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaBNrHW5M=
 github.com/edsrzf/mmap-go v1.0.0 h1:CEBF7HpRnUCSJgGUb5h1Gm7e3VkmVDrR8lvWVLtrOFw=
@@ -76,6 +78,8 @@ github.com/ethereum/go-ethereum v1.8.27/go.mod h1:PwpWDrCLZrV+tfrhqqF6kPknbISMHa
 github.com/ethereum/go-ethereum v1.8.29-0.20190620093831-25c3282cf126/go.mod h1:PwpWDrCLZrV+tfrhqqF6kPknbISMHaJv9Ln3kPCZLwY=
 github.com/ethereum/go-ethereum v1.9.1 h1:MrdTRvKIa3apdx6NW1azzSgl8BQB1eTBVSUmFhuztaU=
 github.com/ethereum/go-ethereum v1.9.1/go.mod h1:PwpWDrCLZrV+tfrhqqF6kPknbISMHaJv9Ln3kPCZLwY=
+github.com/ethereum/go-ethereum v1.9.3 h1:v3bE4abkXknLcyWCf4TRFn+Ecmm9thPtfLFvTEQ+1+U=
+github.com/ethereum/go-ethereum v1.9.3/go.mod h1:PwpWDrCLZrV+tfrhqqF6kPknbISMHaJv9Ln3kPCZLwY=
 github.com/fatih/color v1.7.0 h1:DkWD4oS2D8LGGgTQ6IvwJJXSL5Vp2ffcQg58nFV38Ys=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fjl/memsize v0.0.0-20180929194037-2a09253e352a/go.mod h1:VvhXpOYNQvB+uIk2RvXzuaQtkQJzzIx6lSBe1xv7hi0=
@@ -129,6 +133,7 @@ github.com/gorilla/mux v1.7.2/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2z
 github.com/gorilla/pat v0.0.0-20180118222023-199c85a7f6d1/go.mod h1:YeAe0gNeiNT5hoiZRI4yiOky6jVdNvfO2N6Kav/HmxY=
 github.com/gorilla/websocket v1.4.0 h1:WDFjx/TMzVgy9VdMMQi2K2Emtwi2QcUQsztZ/zLaH/Q=
 github.com/gorilla/websocket v1.4.0/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=
+github.com/graph-gophers/graphql-go v0.0.0-20190902214650-641ae197eec7/go.mod h1:Au3iQ8DvDis8hZ4q2OzRcaKYlAsPt+fYvib5q4nIqu4=
 github.com/grpc-ecosystem/go-grpc-middleware v1.0.0/go.mod h1:FiyG127CGDf3tlThmgyCl78X/SZQqEOJBCDaAfeWzPs=
 github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0/go.mod h1:8NvIoxWQoOIhqOTXgfV/d3M/q6VIi02HzZEHgUlZvzk=
 github.com/grpc-ecosystem/grpc-gateway v1.9.0/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
@@ -144,18 +149,23 @@ github.com/hashicorp/golang-lru v0.5.3 h1:YPkqC67at8FYaadspW/6uE0COsBxS2656RLEr8
 github.com/hashicorp/golang-lru v0.5.3/go.mod h1:iADmTwqILo4mZ8BN3D2Q6+9jd8WM5uGBxy+E8yxSoD4=
 github.com/hashicorp/hcl v1.0.0 h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=
 github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=
+github.com/howeyc/fsnotify v0.9.0/go.mod h1:41HzSPxBGeFRQKEEwgh49TRw/nKBsYZ2cF1OzPjSJsA=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/huin/goupnp v1.0.0 h1:wg75sLpL6DZqwHQN6E1Cfk6mtfzS45z8OV+ic+DtHRo=
 github.com/huin/goupnp v1.0.0/go.mod h1:n9v9KO1tAxYH82qOn+UTIFQDmx5n1Zxd/ClZDMX7Bnc=
 github.com/huin/goutil v0.0.0-20170803182201-1ca381bf3150/go.mod h1:PpLOETDnJ0o3iZrZfqZzyLl6l7F3c6L1oWn7OICBi6o=
 github.com/iden3/go-iden3 v0.0.6 h1:cIvLvG7OEiIO2fIFmMZWv2WcD9LAoF7TIFEaVrJ/s7g=
 github.com/iden3/go-iden3 v0.0.6/go.mod h1:MO2qR1XuxpmKrKk8/ZA8KQ8td8Tp/vvnUyBvk5GogwU=
+github.com/iden3/go-iden3-core v0.0.6 h1:nUjJDmMiOSiIkE2CLMu5cD1NJMI531CT1XO1UAoAUgA=
+github.com/iden3/go-iden3-core v0.0.7-0.20190910103140-0195e977d998 h1:KljoVTu7PQFkerTu/lwyv5AXTNVmLp3kdQU7XkNBaAA=
+github.com/iden3/go-iden3-core v0.0.7-0.20190910103140-0195e977d998/go.mod h1:dDD6lyF9GSaokQQ+ZsJL1fUtBTFve+yRe14bCj3Q33U=
 github.com/iden3/go-iden3-crypto v0.0.0-20190625134645-7b219e15ecda/go.mod h1:/RYuEGiEgMTB2+4eoP6oZ0S0dnMeeQoHvLrrUJBGWvA=
 github.com/iden3/go-iden3-crypto v0.0.0-20190626134645-16423cc3150f/go.mod h1:LLcgB7DLWAUs+8eBSKne+ZHy5z7xtAmlYlEz0M9M8gE=
 github.com/iden3/go-iden3-crypto v0.0.1 h1:xKm9VMebe58pTlM10RH8Qkt/LgNzgsdLul4MJYTLV4s=
 github.com/iden3/go-iden3-crypto v0.0.1/go.mod h1:LLcgB7DLWAUs+8eBSKne+ZHy5z7xtAmlYlEz0M9M8gE=
 github.com/iden3/go-iden3-crypto v0.0.3-0.20190831180703-c95c95b7b161 h1:m/JbZo+lzlIX02tmV12mKa6010dfJegs2jCsgB23udM=
 github.com/iden3/go-iden3-crypto v0.0.3-0.20190831180703-c95c95b7b161/go.mod h1:LLcgB7DLWAUs+8eBSKne+ZHy5z7xtAmlYlEz0M9M8gE=
+github.com/influxdata/influxdb v1.7.8/go.mod h1:qZna6X/4elxqT3yI9iZYdZrWWdeFOOprn86kgg4+IzY=
 github.com/ipfs/go-ipfs-api v0.0.1/go.mod h1:0FhXgCzrLu7qNmdxZvgYqD9jFzJxzz1NAVt3OQ0WOIc=
 github.com/ipfs/go-ipfs-api v0.0.2 h1:Yg+c8oAMVrN1m0OUGfrWBF+rhfqb7uJ123gU2g1giec=
 github.com/ipfs/go-ipfs-api v0.0.2/go.mod h1:0FhXgCzrLu7qNmdxZvgYqD9jFzJxzz1NAVt3OQ0WOIc=
@@ -222,6 +232,7 @@ github.com/mitchellh/mapstructure v1.1.2 h1:fmNYVwqnSfB9mZU6OS2O6GsXM+wcskZDuKQz
 github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
+github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826/go.mod h1:TaXosZuwdSHYgviHp1DAtfrULt5eUgsSMsZf+YrPgl8=
 github.com/mr-tron/base58 v1.1.0 h1:Y51FGVJ91WBqCEabAi5OPUz38eAx8DakuAm5svLcsfQ=
 github.com/mr-tron/base58 v1.1.0/go.mod h1:xcD2VGqlgYjBdcBLw+TuYLr8afG+Hj8g2eTVqeSzSU8=
 github.com/multiformats/go-multiaddr v0.0.1 h1:/QUV3VBMDI6pi6xfiw7lr6xhDWWvQKn9udPn68kLSdY=
@@ -239,6 +250,8 @@ github.com/olekukonko/tablewriter v0.0.1/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXW
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/gomega v1.4.3/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
+github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
+github.com/oschwald/maxminddb-golang v1.4.0/go.mod h1:3jhIUymTJ5VREKyIhWm66LJiQt04F0UCDdodShpjWsY=
 github.com/pborman/uuid v1.2.0 h1:J7Q5mO4ysT1dv8hyrUGHb9+ooztCXu1D8MY8DZYsu3g=
 github.com/pborman/uuid v1.2.0/go.mod h1:X/NO0urCmaxf9VXbdlT7C2Yzkj2IKimNn4k+gtPdI/k=
 github.com/pelletier/go-toml v1.2.0 h1:T5zMGML61Wp+FlcbWjRDT7yAxhJNAiPPLOFECq181zc=
