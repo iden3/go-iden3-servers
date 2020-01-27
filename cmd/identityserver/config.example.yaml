@@ -1,6 +1,0 @@
-server:
-  serviceapi: 0.0.0.0:25000
-
-storage:
-  path: /tmp/iden3/identityserverdb
-
