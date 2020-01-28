@@ -11,19 +11,18 @@ import (
 	ethkeystore "github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/iden3/go-iden3-core/core"
+	"github.com/iden3/go-iden3-core/components/idenadminutils"
+	"github.com/iden3/go-iden3-core/components/idenmanager"
+	"github.com/iden3/go-iden3-core/core/genesis"
+	"github.com/iden3/go-iden3-core/core/proof"
 	"github.com/iden3/go-iden3-core/db"
 	"github.com/iden3/go-iden3-core/eth"
 	babykeystore "github.com/iden3/go-iden3-core/keystore"
 	"github.com/iden3/go-iden3-core/merkletree"
-	"github.com/iden3/go-iden3-core/services/adminsrv"
-	"github.com/iden3/go-iden3-core/services/claimsrv"
-	// "github.com/iden3/go-iden3-core/services/counterfactualsrv"
-	"github.com/iden3/go-iden3-core/services/ethsrv"
-	"github.com/iden3/go-iden3-core/services/identitysrv"
-	"github.com/iden3/go-iden3-core/services/rootsrv"
-	"github.com/iden3/go-iden3-core/services/signedpacketsrv"
-	"github.com/iden3/go-iden3-core/services/signsrv"
+
+	"github.com/iden3/go-iden3-core/components/idensigner"
+	"github.com/iden3/go-iden3-core/components/idenstatereader"
+	"github.com/iden3/go-iden3-core/services/idenstatewriter"
 	"github.com/iden3/go-iden3-crypto/babyjub"
 	log "github.com/sirupsen/logrus"
 )
@@ -45,14 +44,10 @@ func Assert(msg string, err error) {
 	}
 }
 
-var Claimservice *claimsrv.Service
-var Rootservice rootsrv.Service
-var Idservice *identitysrv.Service
+var Claimservice *idenmanager.IdenManager
+var Rootservice idenstatewriter.IdenStateWriter
 
-// var Counterfactualservice counterfactualsrv.Service
-var Adminservice adminsrv.Service
-
-var SignedPacketService signedpacketsrv.SignedPacketSigner
+var Adminservice *idenadminutils.IdenAdminUtils
 
 func LoadKeyStore() (*ethkeystore.KeyStore, accounts.Account) {
 
@@ -128,11 +123,11 @@ func LoadEthClient2(ks *ethkeystore.KeyStore, acc *accounts.Account) *eth.Client
 	return eth.NewClient2(client, acc, ks)
 }
 
-func LoadEthService(client *eth.Client2) ethsrv.Service {
-	addresses := ethsrv.ContractAddresses{
+func LoadEthService(client *eth.Client2) idenstatereader.IdenStateReader {
+	addresses := idenstatereader.ContractAddresses{
 		RootCommits: common.HexToAddress(C.Contracts.RootCommits.Address),
 	}
-	return ethsrv.New(client, addresses)
+	return idenstatereader.New(client, addresses)
 }
 
 func LoadWeb3(ks *ethkeystore.KeyStore, acc *accounts.Account) *eth.Web3Client {
@@ -184,69 +179,23 @@ func LoadContract(client eth.Client, jsonabifile string, address *string) *eth.C
 	return eth.NewContract(client, abi, code, addrPtr)
 }
 
-func LoadRootsService(ethSrv ethsrv.Service, kUpdateRootMtp []byte) rootsrv.Service {
-	return rootsrv.New(
-		ethSrv,
+func LoadRootsService(idenstatereader idenstatereader.IdenStateReader, kUpdateRootMtp []byte) idenstatewriter.IdenStateWriter {
+	return idenstatewriter.New(
+		idenstatereader,
 		&C.Id,
 		kUpdateRootMtp,
 		common.HexToAddress(C.Contracts.RootCommits.Address),
 	)
 }
 
-func LoadIdentityService(claimservice *claimsrv.Service) *identitysrv.Service {
-	return identitysrv.New(claimservice)
-}
-
-// DEPRECATED
-// func LoadCounterfactualService(client *eth.Web3Client, claimservice *claimsrv.Service, storage db.Storage) counterfactualsrv.Service {
-//
-// 	counterfactualstorage := storage.WithPrefix(dbCounterfactualPrefix)
-//
-// 	deployerContract := LoadContract(
-// 		client,
-// 		C.Contracts.Iden3Deployer.JsonABI,
-// 		&C.Contracts.Iden3Deployer.Address)
-//
-// 	implContract := LoadContract(
-// 		client,
-// 		C.Contracts.Iden3Impl.JsonABI,
-// 		&C.Contracts.Iden3Impl.Address)
-//
-// 	proxyContract := LoadContract(
-// 		client,
-// 		C.Contracts.Iden3Proxy.JsonABI,
-// 		nil)
-//
-// 	return counterfactualsrv.New(deployerContract, implContract, proxyContract, claimservice, counterfactualstorage)
-// }
-
-func LoadClaimService(mt *merkletree.MerkleTree, rootservice rootsrv.Service, ks *babykeystore.KeyStore, pk *babyjub.PublicKey) *claimsrv.Service {
+func LoadClaimService(mt *merkletree.MerkleTree, rootservice idenstatewriter.IdenStateWriter, ks *babykeystore.KeyStore, pk *babyjub.PublicKey) *idenmanager.IdenManager {
 	log.WithField("id", C.Id.String()).Info("Running claim service")
-	signer := signsrv.New(ks, *pk)
-	return claimsrv.New(&C.Id, mt, rootservice, *signer)
+	signer := idensigner.New(ks, *pk)
+	return idenmanager.New(&C.Id, mt, rootservice, *signer)
 }
 
-func LoadAdminService(mt *merkletree.MerkleTree, rootservice rootsrv.Service, claimservice *claimsrv.Service) adminsrv.Service {
-	return adminsrv.New(mt, rootservice, claimservice)
-}
-
-// LoadSignedPacketSigner Adds new claim authorizing a secp256ks key. Returns SignedPacketSigner to sign with key sign.
-func LoadSignedPacketSigner(ks *babykeystore.KeyStore, pk *babyjub.PublicKey, claimservice *claimsrv.Service) *signedpacketsrv.SignedPacketSigner {
-	// Create signer object
-	signer := signsrv.New(ks, *pk)
-	// Claim authorizing public key baby jub and get its proofKsign
-	claim := core.NewClaimAuthorizeKSignBabyJub(pk)
-	// Add claim
-	err := claimservice.AddClaim(claim)
-	if (err != nil) && (err != merkletree.ErrEntryIndexAlreadyExists) {
-		panic(err)
-	}
-	// return claim with proofs
-	proofKSign, err := claimservice.GetClaimProofByHiBlockchain(claim.Entry().HIndex())
-	if err != nil {
-		panic(err)
-	}
-	return signedpacketsrv.NewSignedPacketSigner(*signer, *proofKSign, C.Id)
+func LoadAdminService(mt *merkletree.MerkleTree, rootservice idenstatewriter.IdenStateWriter, claimservice *idenmanager.IdenManager) *idenadminutils.IdenAdminUtils {
+	return idenadminutils.New(mt, rootservice, claimservice)
 }
 
 // LoadGenesis will calculate the genesis id from the keys in the configuration
@@ -254,12 +203,12 @@ func LoadSignedPacketSigner(ks *babykeystore.KeyStore, pk *babyjub.PublicKey, cl
 // merkle tree with the genesis claims if it's empty or check that the claims
 // exist in the merkle tree otherwise.  It returns the ProofClaims of the
 // genesis claims.
-func LoadGenesis(mt *merkletree.MerkleTree) *core.GenesisProofClaims {
+func LoadGenesis(mt *merkletree.MerkleTree) *genesis.GenesisProofClaims {
 	kOp := C.Keys.BabyJub.KOp
 	kDis := C.Keys.Ethereum.KDis
 	kReen := C.Keys.Ethereum.KReen
 	kUpdateRoot := C.Keys.Ethereum.KUpdateRoot
-	id, proofClaims, err := core.CalculateIdGenesisFrom4Keys(&kOp, kDis, kReen, kUpdateRoot)
+	id, proofClaims, err := genesis.CalculateIdGenesisFrom4Keys(&kOp, kDis, kReen, kUpdateRoot)
 	Assert("CalculateIdGenesis failed", err)
 
 	if *id != C.Id {
@@ -267,7 +216,7 @@ func LoadGenesis(mt *merkletree.MerkleTree) *core.GenesisProofClaims {
 			"doesn't match configuration id (%v)", id.String(), C.Id.String()))
 	}
 
-	proofClaimsList := []core.ProofClaim{proofClaims.KOp, proofClaims.KDis,
+	proofClaimsList := []proof.ProofClaim{proofClaims.KOp, proofClaims.KDis,
 		proofClaims.KReen, proofClaims.KUpdateRoot}
 	root := mt.RootKey()
 	if bytes.Equal(root[:], merkletree.HashZero[:]) {
@@ -275,7 +224,7 @@ func LoadGenesis(mt *merkletree.MerkleTree) *core.GenesisProofClaims {
 		// Add genesis claims to merkle tree
 		log.WithField("root", root.Hex()).Info("Merkle tree is empty")
 		for _, proofClaim := range proofClaimsList {
-			if err := mt.Add(proofClaim.Claim); err != nil {
+			if err := mt.AddEntry(proofClaim.Claim); err != nil {
 				Assert("Error adding claim to merkle tree", err)
 			}
 		}

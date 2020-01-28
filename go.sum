@@ -159,6 +159,8 @@ github.com/iden3/go-iden3 v0.0.6/go.mod h1:MO2qR1XuxpmKrKk8/ZA8KQ8td8Tp/vvnUyBvk
 github.com/iden3/go-iden3-core v0.0.6 h1:nUjJDmMiOSiIkE2CLMu5cD1NJMI531CT1XO1UAoAUgA=
 github.com/iden3/go-iden3-core v0.0.7-0.20190910103140-0195e977d998 h1:KljoVTu7PQFkerTu/lwyv5AXTNVmLp3kdQU7XkNBaAA=
 github.com/iden3/go-iden3-core v0.0.7-0.20190910103140-0195e977d998/go.mod h1:dDD6lyF9GSaokQQ+ZsJL1fUtBTFve+yRe14bCj3Q33U=
+github.com/iden3/go-iden3-core v0.0.7-0.20200128100725-56ab4417a3c7 h1:jxT4esIw1J74Jlw1BGVoNV187Kkk4NRD8Vkievp22eg=
+github.com/iden3/go-iden3-core v0.0.7-0.20200128100725-56ab4417a3c7/go.mod h1:84fGgDl+bmlfGqiS33QPSQbJRTeZ6PZWxQMtFQWkla8=
 github.com/iden3/go-iden3-crypto v0.0.0-20190625134645-7b219e15ecda/go.mod h1:/RYuEGiEgMTB2+4eoP6oZ0S0dnMeeQoHvLrrUJBGWvA=
 github.com/iden3/go-iden3-crypto v0.0.0-20190626134645-16423cc3150f/go.mod h1:LLcgB7DLWAUs+8eBSKne+ZHy5z7xtAmlYlEz0M9M8gE=
 github.com/iden3/go-iden3-crypto v0.0.1 h1:xKm9VMebe58pTlM10RH8Qkt/LgNzgsdLul4MJYTLV4s=

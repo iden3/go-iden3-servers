@@ -6,11 +6,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	common3 "github.com/iden3/go-iden3-core/common"
+	"github.com/iden3/go-iden3-core/components/idenmanager"
 	"github.com/iden3/go-iden3-core/core"
+	"github.com/iden3/go-iden3-core/core/claims"
+	"github.com/iden3/go-iden3-core/crypto"
 	"github.com/iden3/go-iden3-core/merkletree"
-	"github.com/iden3/go-iden3-core/services/claimsrv"
-	"github.com/iden3/go-iden3-core/services/notificationsrv"
-	"github.com/iden3/go-iden3-core/utils"
 	"github.com/iden3/go-iden3-servers/cmd/genericserver"
 )
 
@@ -51,12 +51,12 @@ func handlePostClaim(c *gin.Context) {
 		return
 	}
 
-	hash := core.ClearMostSigByte(utils.HashBytes([]byte(m.Cert)))
+	hash := claims.ClearMostSigByte(crypto.HashBytes([]byte(m.Cert)))
 	// Pending to update according new data received by the server
-	auxData := core.ClearMostSigByte(utils.HashBytes([]byte(m.Cert)))
-	objectType := core.ObjectTypeCertificate
+	auxData := claims.ClearMostSigByte(crypto.HashBytes([]byte(m.Cert)))
+	objectType := claims.ObjectTypeCertificate
 	indexObject := uint16(0)
-	claim, err := core.NewClaimLinkObjectIdentity(objectType, indexObject,
+	claim, err := claims.NewClaimLinkObjectIdentity(objectType, indexObject,
 		m.IdData.Id, hash, auxData)
 	if err != nil {
 		genericserver.Fail(c, "error on NewClaimLinkObjectIdentity", err)
@@ -65,7 +65,7 @@ func handlePostClaim(c *gin.Context) {
 
 	// If necessary store the claim with a version higher than an existing
 	// claim to invalidate the later.
-	version, err := claimsrv.GetNextVersion(genericserver.Claimservice.MT(), claim.Entry().HIndex())
+	version, err := idenmanager.GetNextVersion(genericserver.Claimservice.MT(), claim.Entry().HIndex())
 	if err != nil {
 		genericserver.Fail(c, "error on GetNextVersion", err)
 		return
@@ -79,23 +79,13 @@ func handlePostClaim(c *gin.Context) {
 		return
 	}
 
+	// TODO
 	// return claim with proofs.
-	proofClaim, err := genericserver.Claimservice.GetClaimProofByHiBlockchain(claim.Entry().HIndex())
-	if err != nil {
-		genericserver.Fail(c, "error on GetClaimProofByHi", err)
-		return
-	}
-
-	// Send proofClaim to notification server.
-	service := notificationsrv.New(m.IdData.NotifSrvUrl, &genericserver.SignedPacketService)
-
-	// Send packet.
-	notification := notificationsrv.NewMsgProofClaim(proofClaim)
-	err = service.SendNotification(notification, m.IdData.Id)
-	if err != nil {
-		genericserver.Fail(c, "error at sending notification", err)
-		return
-	}
+	// proofClaim, err := genericserver.Claimservice.GetClaimProofByHiBlockchain(claim.Entry().HIndex())
+	// if err != nil {
+	// 	genericserver.Fail(c, "error on GetClaimProofByHi", err)
+	// 	return
+	// }
 
 	c.JSON(200, gin.H{
 		"status": "ok",

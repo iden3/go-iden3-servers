@@ -8,7 +8,7 @@ import (
 	"os"
 
 	common3 "github.com/iden3/go-iden3-core/common"
-	"github.com/iden3/go-iden3-core/core"
+	"github.com/iden3/go-iden3-core/core/claims"
 	"github.com/iden3/go-iden3-servers/cmd/genericserver"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -70,7 +70,7 @@ func cmdAddClaim(c *cli.Context) error {
 	}
 	copy(indexSlot[:], indexData)
 	copy(dataSlot[:], outData)
-	claim := core.NewClaimBasic(indexSlot, dataSlot)
+	claim := claims.NewClaimBasic(indexSlot, dataSlot)
 	fmt.Println("clam: " + common3.HexEncode(claim.Entry().Bytes()))
 
 	err = claimService.AddClaim(claim)
@@ -131,12 +131,12 @@ func cmdAddClaimsFromFile(c *cli.Context) error {
 		}
 		copy(indexSlot[:], line[0])
 		copy(dataSlot[:], line[1])
-		claim := core.NewClaimBasic(indexSlot, dataSlot)
-		// claim := core.NewGenericClaim("iden3.io", "generic", []byte(line[0]), []byte(line[1]))
+		claim := claims.NewClaimBasic(indexSlot, dataSlot)
+		// claim := claims.NewGenericClaim("iden3.io", "generic", []byte(line[0]), []byte(line[1]))
 		fmt.Println("clam: " + common3.HexEncode(claim.Entry().Bytes()) + "\n")
 
 		// add claim to merkletree, without updating the root, that will be done on the end of the loop (csv file)
-		err = mt.Add(claim.Entry())
+		err = mt.AddClaim(claim)
 		if err != nil {
 			return err
 		}
@@ -164,7 +164,7 @@ func cmdAddClaimsFromFile(c *cli.Context) error {
 		}
 		copy(indexSlot[:], line[0])
 		copy(dataSlot[:], line[1])
-		claim := core.NewClaimBasic(indexSlot, dataSlot)
+		claim := claims.NewClaimBasic(indexSlot, dataSlot)
 		fmt.Println("clam: " + common3.HexEncode(claim.Entry().Bytes()))
 
 		// the proofs better generate them once all claims are added
