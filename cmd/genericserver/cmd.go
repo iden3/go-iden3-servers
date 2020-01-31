@@ -15,7 +15,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	common3 "github.com/iden3/go-iden3-core/common"
-	"github.com/iden3/go-iden3-core/core"
+	"github.com/iden3/go-iden3-core/core/claims"
+	"github.com/iden3/go-iden3-core/core/genesis"
 	"github.com/iden3/go-iden3-core/db"
 	babykeystore "github.com/iden3/go-iden3-core/keystore"
 	shell "github.com/ipfs/go-ipfs-api"
@@ -58,7 +59,7 @@ func CmdAddClaim(c *cli.Context) error {
 	}
 	copy(indexSlot[:], indexData)
 	copy(dataSlot[:], outData)
-	claim := core.NewClaimBasic(indexSlot, dataSlot)
+	claim := claims.NewClaimBasic(indexSlot, dataSlot)
 	fmt.Println("clam: " + common3.HexEncode(claim.Entry().Bytes()))
 
 	err = claimService.AddClaim(claim)
@@ -118,12 +119,11 @@ func CmdAddClaimsFromFile(c *cli.Context) error {
 		}
 		copy(indexSlot[:], line[0])
 		copy(dataSlot[:], line[1])
-		claim := core.NewClaimBasic(indexSlot, dataSlot)
-		// claim := core.NewGenericClaim("iden3.io", "generic", []byte(line[0]), []byte(line[1]))
+		claim := claims.NewClaimBasic(indexSlot, dataSlot)
 		fmt.Println("clam: " + common3.HexEncode(claim.Entry().Bytes()) + "\n")
 
 		// add claim to merkletree, without updating the root, that will be done on the end of the loop (csv file)
-		err = mt.Add(claim.Entry())
+		err = mt.AddClaim(claim)
 		if err != nil {
 			return err
 		}
@@ -151,7 +151,7 @@ func CmdAddClaimsFromFile(c *cli.Context) error {
 		}
 		copy(indexSlot[:], line[0])
 		copy(dataSlot[:], line[1])
-		claim := core.NewClaimBasic(indexSlot, dataSlot)
+		claim := claims.NewClaimBasic(indexSlot, dataSlot)
 		fmt.Println("clam: " + common3.HexEncode(claim.Entry().Bytes()))
 
 		// the proofs better generate them once all claims are added
@@ -310,7 +310,7 @@ func NewIdentity(keyStorePath, keyStorePassword, keyStoreBabyPath, keyStoreBabyP
 	kUpdateRoot := accKUpdateRoot.Address
 
 	// create genesis identity
-	id, _, err := core.CalculateIdGenesisFrom4Keys(kopPub, kDis, kReen, kUpdateRoot)
+	id, _, err := genesis.CalculateIdGenesisFrom4Keys(kopPub, kDis, kReen, kUpdateRoot)
 	if err != nil {
 		return err
 	}

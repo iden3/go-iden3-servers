@@ -6,12 +6,22 @@ import (
 
 	"github.com/gin-gonic/gin"
 	common3 "github.com/iden3/go-iden3-core/common"
+	idenmanagermsgs "github.com/iden3/go-iden3-core/components/idenmanager/messages"
 	"github.com/iden3/go-iden3-core/core"
-	"github.com/iden3/go-iden3-core/services/claimsrv"
+	"github.com/iden3/go-iden3-core/crypto"
 	"github.com/iden3/go-iden3-servers/cmd/genericserver"
 
 	"github.com/iden3/go-iden3-core/merkletree"
 )
+
+// SetRootMsg contains the data to set the SetRootClaim with its signature in Hex
+type SetRootMsg struct {
+	Root      *merkletree.Hash        `binding:"required"`
+	Id        *core.ID                `binding:"required"`
+	KSignPk   *crypto.PublicKey       `binding:"required"`
+	Timestamp int64                   `binding:"required"`
+	Signature *crypto.SignatureEthMsg `binding:"required"`
+}
 
 // handleCommitNewIdRoot handles a request to set the root key of a user tree
 // though a set root claim.
@@ -23,7 +33,7 @@ func handleCommitNewIdRoot(c *gin.Context) {
 		return
 	}
 
-	var setRootMsg claimsrv.SetRootMsg
+	var setRootMsg SetRootMsg
 	err = c.BindJSON(&setRootMsg)
 	if err != nil {
 		genericserver.Fail(c, "json parsing error", err)
@@ -66,7 +76,7 @@ func handleUpdateSetRootClaim(c *gin.Context) {
 		return
 	}
 
-	var setRootReq claimsrv.SetRoot0Req
+	var setRootReq idenmanagermsgs.SetRoot0Req
 	err = c.BindJSON(&setRootReq)
 	if err != nil {
 		genericserver.Fail(c, "json parsing error", err)
@@ -91,59 +101,6 @@ func handleUpdateSetRootClaim(c *gin.Context) {
 		"setRootClaim": setRootClaim.Entry(),
 	})
 }
-
-// DEPRECATED
-// handlePostClaim handles the request to add a claim to a user tree.
-// func handlePostClaim(c *gin.Context) {
-// 	idHex := c.Param("id")
-// 	id, err := core.IDFromString(idHex)
-// 	if err != nil {
-// 		genericserver.Fail(c, "error on parse id", err)
-// 		return
-// 	}
-// 	var bytesSignedMsg claimsrv.BytesSignedMsg
-// 	err = c.BindJSON(&bytesSignedMsg)
-// 	if err != nil {
-// 		genericserver.Fail(c, "json parsing error", err)
-// 		return
-// 	}
-//
-// 	bytesValue, err := common3.HexDecode(bytesSignedMsg.ValueHex)
-// 	if err != nil {
-// 		genericserver.Fail(c, "error on parsing bytesSignedMsg.HexValue to bytes", err)
-// 		return
-// 	}
-//
-// 	// bytesValue to Element data
-// 	var dataBytes [128]byte
-// 	copy(dataBytes[:], bytesValue)
-// 	data := merkletree.NewDataFromBytes(dataBytes)
-// 	entry := merkletree.Entry{
-// 		Data: *data,
-// 	}
-//
-// 	claimValueMsg := claimsrv.ClaimValueMsg{
-// 		ClaimValue: entry,
-// 		Signature:  bytesSignedMsg.Signature,
-// 		KSignPk:    bytesSignedMsg.KSignPk,
-// 	}
-// 	err = genericserver.Claimservice.AddUserIdClaim(&id, claimValueMsg)
-// 	if err != nil {
-// 		genericserver.Fail(c, "error on AddUserIdClaim", err)
-// 		return
-// 	}
-// 	// return claim with proofs
-// 	proofClaim, err := genericserver.Claimservice.GetClaimProofUserByHi(id, entry.HIndex())
-// 	if err != nil {
-// 		genericserver.Fail(c, "error on GetClaimByHi", err)
-// 		return
-// 	}
-//
-// 	c.JSON(200, gin.H{
-// 		"proofClaim": proofClaim,
-// 	})
-// 	return
-// }
 
 // handleGetIdRoot handles a request to query the root key of a user tree.
 func handleGetIdRoot(c *gin.Context) {
@@ -185,58 +142,6 @@ func handleGetSetRootClaim(c *gin.Context) {
 		"proofClaim": proofClaim,
 	})
 }
-
-// handleGetClaimProofUserByHi handles the request to query the claim proof of
-// a user claim (by hIndex).
-// DEPRECATED
-// func handleGetClaimProofUserByHi(c *gin.Context) {
-// 	idHex := c.Param("id")
-// 	hiHex := c.Param("hi")
-// 	hiBytes, err := common3.HexDecode(hiHex)
-// 	if err != nil {
-// 		genericserver.Fail(c, "error on HexDecode of Hi", err)
-// 		return
-// 	}
-// 	hi := &merkletree.Hash{}
-// 	copy(hi[:], hiBytes)
-// 	id, err := core.IDFromString(idHex)
-// 	if err != nil {
-// 		genericserver.Fail(c, "error on parse id", err)
-// 		return
-// 	}
-// 	proofClaim, err := genericserver.Claimservice.GetClaimProofUserByHi(id, hi)
-// 	if err != nil {
-// 		genericserver.Fail(c, "error on GetClaimByHi", err)
-// 		return
-// 	}
-// 	c.JSON(200, gin.H{
-// 		"proofClaim": proofClaim,
-// 	})
-// 	return
-// }
-
-// TODO: Deprecate handleGetClaimProofByHi
-// handleGetClaimProofByHi handles the request to query the claim proof of a
-// relay claim (by hIndex).
-// func handleGetClaimProofByHi(c *gin.Context) {
-// 	hihex := c.Param("hi")
-// 	hiBytes, err := common3.HexDecode(hihex)
-// 	if err != nil {
-// 		genericserver.Fail(c, "error on HexDecode of Hi", err)
-// 		return
-// 	}
-// 	hi := &merkletree.Hash{}
-// 	copy(hi[:], hiBytes)
-// 	proofClaim, err := genericserver.Claimservice.GetClaimProofByHi(hi)
-// 	if err != nil {
-// 		genericserver.Fail(c, "error on GetClaimProofByHi", err)
-// 		return
-// 	}
-// 	c.JSON(200, gin.H{
-// 		"proofClaim": proofClaim,
-// 	})
-// 	return
-// }
 
 // handleGetClaimProofByHiBlockchain handles the request to query the claim proof of a
 // relay claim (by hIndex) to a root published in the blockchain.

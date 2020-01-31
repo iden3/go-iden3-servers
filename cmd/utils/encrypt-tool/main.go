@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	encryption "github.com/iden3/go-iden3-core/crypto/public-key-encryption"
+	"github.com/iden3/go-iden3-core/crypto"
 )
 
 func usage() {
@@ -33,7 +33,7 @@ func main() {
 	switch cmd {
 	case "gen":
 		// Create key pair
-		kp := encryption.GenKP()
+		kp := crypto.GenKP()
 		fmt.Printf("Public Key: %s\n", hex.EncodeToString(kp.PublicKey.Bytes[:]))
 		fmt.Printf("Key Pair: %s%s\n",
 			hex.EncodeToString(kp.PublicKey.Bytes[:]), hex.EncodeToString(kp.SecretKey.Bytes[:]))
@@ -44,7 +44,7 @@ func main() {
 		}
 		println(inPath)
 		println(outPath)
-		pk, err := encryption.ImportBoxPublicKey(*pkHex)
+		pk, err := crypto.ImportBoxPublicKey(*pkHex)
 		if err != nil {
 			fmt.Println("Error importing public key:", err)
 			return
@@ -54,7 +54,7 @@ func main() {
 			fmt.Println("Error reading input file:", err)
 			return
 		}
-		encData := encryption.Encrypt(pk, data)
+		encData := crypto.Encrypt(pk, data)
 		if err := ioutil.WriteFile(*outPath, encData, 0600); err != nil {
 			fmt.Println("Error writing output file:", err)
 			return
@@ -65,7 +65,7 @@ func main() {
 			usage()
 			return
 		}
-		kp, err := encryption.ImportBoxKP(*kpHex)
+		kp, err := crypto.ImportBoxKP(*kpHex)
 		if err != nil {
 			fmt.Println("Error importing key pair:", err)
 			return
@@ -76,7 +76,7 @@ func main() {
 			return
 		}
 		// Decrypt
-		data, err := encryption.Decrypt(kp, encData)
+		data, err := crypto.Decrypt(kp, encData)
 		if err != nil {
 			fmt.Println("Error decrypting input file:", err)
 			return

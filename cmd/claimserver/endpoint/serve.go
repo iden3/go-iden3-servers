@@ -7,10 +7,9 @@ import (
 	"os/signal"
 
 	"github.com/gin-gonic/gin"
-	"github.com/iden3/go-iden3-core/services/adminsrv"
-	"github.com/iden3/go-iden3-core/services/claimsrv"
-	"github.com/iden3/go-iden3-core/services/rootsrv"
-	"github.com/iden3/go-iden3-core/services/signedpacketsrv"
+	"github.com/iden3/go-iden3-core/components/idenadminutils"
+	"github.com/iden3/go-iden3-core/components/idenmanager"
+	"github.com/iden3/go-iden3-core/services/idenstatewriter"
 	"github.com/iden3/go-iden3-servers/cmd/genericserver"
 
 	log "github.com/sirupsen/logrus"
@@ -56,12 +55,11 @@ func serveAdminApi(stopch chan interface{}) *http.Server {
 }
 
 // Serve initilization all services and its corresponding api calls.
-func Serve(rs rootsrv.Service, cs *claimsrv.Service, as adminsrv.Service, sp *signedpacketsrv.SignedPacketSigner) {
+func Serve(rs idenstatewriter.IdenStateWriter, cs *idenmanager.IdenManager, as *idenadminutils.IdenAdminUtils) {
 
 	genericserver.Claimservice = cs
 	genericserver.Rootservice = rs
 	genericserver.Adminservice = as
-	genericserver.SignedPacketService = *sp
 
 	stopch := make(chan interface{})
 
