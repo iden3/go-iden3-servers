@@ -11,7 +11,7 @@ var ServerCommands = []cli.Command{
 		Name:    "init",
 		Aliases: []string{},
 		Usage:   "create keys and identity for the server",
-		Action:  cmd.WithCfg(cmd.CmdNewIdentity),
+		Action:  cmd.CmdNewIdentity,
 	},
 	// {
 	// 	Name:    "start",
