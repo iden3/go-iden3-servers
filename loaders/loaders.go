@@ -32,13 +32,6 @@ const (
 	filePrefix   = "file:"
 )
 
-func Assert(msg string, err error) {
-	if err != nil {
-		log.Error(msg, " ", err.Error())
-		os.Exit(1)
-	}
-}
-
 // func LoadKeyStore(cfgKeyStore *config.ConfigKeyStore, cfgEthKeys *config.ConfigEthKeys) (*ethkeystore.KeyStore, accounts.Account) {
 // 	var err error
 // 	var passwd string
@@ -100,20 +93,22 @@ func LoadKeyStoreBabyJub(cfgKeyStore *config.ConfigKeyStore, kOp *babyjub.Public
 	}
 }
 
-func LoadEthClient2(ks *ethkeystore.KeyStore, acc *accounts.Account, web3Url string) *eth.Client2 {
+func LoadEthClient2(ks *ethkeystore.KeyStore, acc *accounts.Account, web3Url string) (*eth.Client2, error) {
 	// TODO: Handle the hidden: thing with a custon configuration type
 	hidden := strings.HasPrefix(web3Url, "hidden:")
 	if hidden {
 		web3Url = web3Url[len("hidden:"):]
 	}
 	client, err := ethclient.Dial(web3Url)
-	Assert("Cannot open connection to web3", err)
+	if err != nil {
+		return nil, fmt.Errorf("Error dialing with ethclient: %w", err)
+	}
 	if hidden {
 		log.WithField("url", "(hidden)").Info("Connection to web3 server opened")
 	} else {
 		log.WithField("url", web3Url).Info("Connection to web3 server opened")
 	}
-	return eth.NewClient2(client, acc, ks)
+	return eth.NewClient2(client, acc, ks), nil
 }
 
 func LoadIdenPubOnChain(client *eth.Client2, idenStatesAddress common.Address) idenpubonchain.IdenPubOnChainer {
@@ -124,47 +119,57 @@ func LoadIdenPubOnChain(client *eth.Client2, idenStatesAddress common.Address) i
 	return idenpubonchain.New(client, addresses)
 }
 
-func LoadWeb3(ks *ethkeystore.KeyStore, acc *accounts.Account, web3Url string) *eth.Web3Client {
+func LoadWeb3(ks *ethkeystore.KeyStore, acc *accounts.Account, web3Url string) (*eth.Web3Client, error) {
 	// Create geth client
 	hidden := strings.HasPrefix(web3Url, "hidden:")
 	if hidden {
 		web3Url = web3Url[len("hidden:"):]
 	}
 	web3cli, err := eth.NewWeb3Client(web3Url, ks, acc)
-	Assert("Cannot open connection to web3", err)
+	if err != nil {
+		return nil, fmt.Errorf("Error creating web3 client: %w", err)
+	}
 	if hidden {
 		log.WithField("url", "(hidden)").Info("Connection to web3 server opened")
 	} else {
 		log.WithField("url", web3Url).Info("Connection to web3 server opened")
 	}
-	return web3cli
+	return web3cli, nil
 }
 
-func LoadStorage(storagePath string) db.Storage {
+func LoadStorage(storagePath string) (db.Storage, error) {
 	// Open database
 	storage, err := db.NewLevelDbStorage(storagePath, false)
-	Assert("Cannot open storage", err)
+	if err != nil {
+		return nil, fmt.Errorf("Error opening leveldb storage: %w", err)
+	}
 	log.WithField("path", storagePath).Info("Storage opened")
-	return storage
+	return storage, nil
 }
 
-func LoadMerkele(storage db.Storage) *merkletree.MerkleTree {
+func LoadMerkele(storage db.Storage) (*merkletree.MerkleTree, error) {
 	mtstorage := storage.WithPrefix(dbMerkletreePrefix)
 	mt, err := merkletree.NewMerkleTree(mtstorage, 140)
-	Assert("Cannot open merkle tree", err)
+	if err != nil {
+		return nil, fmt.Errorf("Error opening merkle tree: %w", err)
+	}
 	log.WithField("hash", mt.RootKey().Hex()).Info("Current root")
 
-	return mt
+	return mt, nil
 }
 
-func LoadContract(client eth.Client, jsonabifile string, address *common.Address) *eth.Contract {
+func LoadContract(client eth.Client, jsonabifile string, address *common.Address) (*eth.Contract, error) {
 	abiFile, err := os.Open(jsonabifile)
-	Assert("Cannot read contract "+jsonabifile, err)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading contract %s: %w", jsonabifile, err)
+	}
 
 	abi, code, err := eth.UnmarshallSolcAbiJson(abiFile)
-	Assert("Cannot parse contract "+jsonabifile, err)
+	if err != nil {
+		return nil, fmt.Errorf("Error parsing contract %s: %w", jsonabifile, err)
+	}
 
-	return eth.NewContract(client, abi, code, address)
+	return eth.NewContract(client, abi, code, address), nil
 }
 
 // func LoadIdenManager(mt *merkletree.MerkleTree, rootservice idenstatewriter.IdenStateWriter, ks *babykeystore.KeyStore, pk *babyjub.PublicKey, id *core.ID) *idenmanager.IdenManager {
@@ -176,39 +181,6 @@ func LoadContract(client eth.Client, jsonabifile string, address *common.Address
 // func LoadIdenAdminUtils(mt *merkletree.MerkleTree, rootservice idenstatewriter.IdenStateWriter, claimservice *idenmanager.IdenManager) *idenadminutils.IdenAdminUtils {
 // 	return idenadminutils.New(mt, rootservice, claimservice)
 // }
-
-func NewIssuer(extraGenesisClaims []merkletree.Entrier, storage db.Storage,
-	keyStore *babykeystore.KeyStore, keyStorePass []byte, idenPubOnChain idenpubonchain.IdenPubOnChainer,
-	idenPubOffChainWrite idenpuboffchain.IdenPubOffChainWriter) (*issuer.Issuer, error) {
-	cfg := issuer.ConfigDefault
-
-	kOp, err := keyStore.NewKey(keyStorePass)
-	if err = keyStore.UnlockKey(kOp, keyStorePass); err != nil {
-		return nil, err
-	}
-
-	// Create the Issuer in a memory db and later transfer it to the storage under the identity prefix
-	memStorage := db.NewMemoryStorage()
-	issuer, err := issuer.New(cfg, kOp, extraGenesisClaims, memStorage, keyStore, idenPubOnChain,
-		idenPubOffChainWrite)
-	if err != nil {
-		return nil, err
-	}
-	id := issuer.ID()
-	idenStorage := storage.WithPrefix([]byte(fmt.Sprintf("%v:", id)))
-	tx, err := idenStorage.NewTx()
-	if err != nil {
-		return nil, err
-	}
-	memStorage.Iterate(func(k []byte, v []byte) (bool, error) {
-		tx.Put(k, v)
-		return true, nil
-	})
-	if err := tx.Commit(); err != nil {
-		return nil, err
-	}
-	return LoadIssuer(id, storage, keyStore, idenPubOnChain, idenPubOffChainWrite)
-}
 
 func LoadIssuer(id *core.ID, storage db.Storage, keyStore *babykeystore.KeyStore,
 	idenPubOnChain idenpubonchain.IdenPubOnChainer,
@@ -291,12 +263,24 @@ func LoadServer(cfg *config.Config) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	client := LoadWeb3(nil, nil, cfg.Web3.Url)
+	client, err := LoadWeb3(nil, nil, cfg.Web3.Url)
+	if err != nil {
+		return nil, err
+	}
 	// client2 := LoadEthClient2(ks, &acc, cfg.Web3.Url)
-	client2 := LoadEthClient2(nil, nil, cfg.Web3.Url)
+	client2, err := LoadEthClient2(nil, nil, cfg.Web3.Url)
+	if err != nil {
+		return nil, err
+	}
 	idenPubOnChain := LoadIdenPubOnChain(client2, cfg.Contracts.IdenStates.Address)
-	storage := LoadStorage(cfg.Storage.Path)
-	mt := LoadMerkele(storage)
+	storage, err := LoadStorage(cfg.Storage.Path)
+	if err != nil {
+		return nil, err
+	}
+	mt, err := LoadMerkele(storage)
+	if err != nil {
+		return nil, err
+	}
 
 	is, err := LoadIssuer(&cfg.Id, storage, ksBaby, idenPubOnChain, nil)
 	if err != nil {

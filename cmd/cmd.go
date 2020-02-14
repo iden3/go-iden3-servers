@@ -148,7 +148,10 @@ func WithCfg(cmd func(c *cli.Context, cfg *config.Config) error) func(c *cli.Con
 
 // DB
 func CmdDbRawDump(c *cli.Context, storagePath string) error {
-	storage := loaders.LoadStorage(storagePath)
+	storage, err := loaders.LoadStorage(storagePath)
+	if err != nil {
+		return err
+	}
 	ldb := (storage.(*db.LevelDbStorage)).LevelDB()
 	iter := ldb.NewIterator(nil, nil)
 	for iter.Next() {
@@ -170,7 +173,10 @@ func CmdDbRawImport(c *cli.Context, storagePath string) error {
 
 	count := 0
 
-	storage := loaders.LoadStorage(storagePath)
+	storage, err := loaders.LoadStorage(storagePath)
+	if err != nil {
+		return err
+	}
 	tx, err := storage.NewTx()
 	if err != nil {
 		return err
@@ -210,7 +216,10 @@ func CmdDbRawImport(c *cli.Context, storagePath string) error {
 }
 
 func CmdDbIPFSexport(c *cli.Context, storagePath string) error {
-	storage := loaders.LoadStorage(storagePath)
+	storage, err := loaders.LoadStorage(storagePath)
+	if err != nil {
+		return err
+	}
 	ldb := (storage.(*db.LevelDbStorage)).LevelDB()
 	iter := ldb.NewIterator(nil, nil)
 	for iter.Next() {
@@ -250,7 +259,10 @@ func NewIssuer(storagePath, keyStoreBabyPath, keyStoreBabyPassword string) error
 		return err
 	}
 	id := is.ID()
-	storage := loaders.LoadStorage(storagePath)
+	storage, err := loaders.LoadStorage(storagePath)
+	if err != nil {
+		return err
+	}
 	idenStorage := storage.WithPrefix([]byte(fmt.Sprintf("%v:", id)))
 	tx, err := idenStorage.NewTx()
 	if err != nil {
