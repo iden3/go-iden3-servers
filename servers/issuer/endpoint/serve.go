@@ -19,29 +19,30 @@ func init() {
 }
 
 // serveServiceApi start service api calls.
-func serveServiceApi(addr string, iden *loaders.Identity) *http.Server {
-	api, serviceapi := serve.NewServiceAPI("/api/unstable", iden)
-	serviceapi.POST("/claims", serve.WithIden(iden, handlePostClaim))                  // Get relay claim proof
-	serviceapi.GET("/claims/:hi/proof", serve.WithIden(iden, handleGetClaimProofByHi)) // Get relay claim proof
+func serveServiceApi(addr string, srv *loaders.Server) *http.Server {
+	// api, serviceapi := serve.NewServiceAPI("/api/unstable", srv)
+	// serviceapi.POST("/claims", serve.WithServer(srv, handlePostClaim))                  // Get relay claim proof
+	// serviceapi.GET("/claims/:hi/proof", serve.WithServer(srv, handleGetClaimProofByHi)) // Get relay claim proof
 
-	serviceapisrv := &http.Server{Addr: addr, Handler: api}
-	go func() {
-		if err := serve.ListenAndServe(serviceapisrv, "Service"); err != nil &&
-			err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
-		}
-	}()
-	return serviceapisrv
+	// serviceapisrv := &http.Server{Addr: addr, Handler: api}
+	// go func() {
+	// 	if err := serve.ListenAndServe(serviceapisrv, "Service"); err != nil &&
+	// 		err != http.ErrServerClosed {
+	// 		log.Fatalf("listen: %s\n", err)
+	// 	}
+	// }()
+	// return serviceapisrv
+	return nil
 }
 
 // serveAdminApi start admin api calls.
-func serveAdminApi(addr string, stopch chan interface{}, iden *loaders.Identity) *http.Server {
-	api, adminapi := serve.NewAdminAPI("/api/unstable", stopch, iden)
+func serveAdminApi(addr string, stopch chan interface{}, srv *loaders.Server) *http.Server {
+	api, adminapi := serve.NewAdminAPI("/api/unstable", stopch, srv)
 	if adminapi == nil {
 		println("IGNORE ME")
 	}
 	// DEPRECATED
-	// adminapi.POST("/claims/basic", serve.WithIden(iden, handleAddClaimBasic))
+	// adminapi.POST("/claims/basic", serve.WithServer(srv, handleAddClaimBasic))
 
 	adminapisrv := &http.Server{Addr: addr, Handler: api}
 	go func() {
@@ -54,7 +55,7 @@ func serveAdminApi(addr string, stopch chan interface{}, iden *loaders.Identity)
 }
 
 // Serve initilization all services and its corresponding api calls.
-func Serve(cfg *config.Config, iden *loaders.Identity) {
+func Serve(cfg *config.Config, srv *loaders.Server) {
 
 	stopch := make(chan interface{})
 
@@ -70,9 +71,9 @@ func Serve(cfg *config.Config, iden *loaders.Identity) {
 	}()
 
 	// start servers.
-	iden.StateWriter.Start()
-	serviceapisrv := serveServiceApi(cfg.Server.ServiceApi, iden)
-	adminapisrv := serveAdminApi(cfg.Server.AdminApi, stopch, iden)
+	// srv.StateWriter.Start()
+	serviceapisrv := serveServiceApi(cfg.Server.ServiceApi, srv)
+	adminapisrv := serveAdminApi(cfg.Server.AdminApi, stopch, srv)
 
 	// wait until shutdown signal.
 	<-stopch

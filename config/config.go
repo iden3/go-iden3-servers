@@ -36,25 +36,25 @@ type ConfigEthKeys struct {
 }
 
 type ConfigContracts struct {
-	RootCommits   ConfigContract `validate:"required"`
-	Iden3Impl     ConfigContract `validate:"required"`
-	Iden3Deployer ConfigContract `validate:"required"`
-	Iden3Proxy    ConfigContract `validate:"required"`
+	IdenStates ConfigContract `validate:"required"`
+	// Iden3Impl     ConfigContract `validate:"required"`
+	// Iden3Deployer ConfigContract `validate:"required"`
+	// Iden3Proxy    ConfigContract `validate:"required"`
 }
 
 type Config struct {
-	Id        core.ID      `validate:"required"`
-	Domain    string       `validate:"required"`
-	Namespace string       `validate:"required"`
-	Server    ConfigServer `validate:"required"`
-	Web3      struct {
+	Id core.ID `validate:"required"`
+	// Domain    string       `validate:"required"`
+	// Namespace string       `validate:"required"`
+	Server ConfigServer `validate:"required"`
+	Web3   struct {
 		Url string `validate:"required"`
 	} `validate:"required"`
 	KeyStore     ConfigKeyStore `validate:"required"`
 	KeyStoreBaby ConfigKeyStore `validate:"required"`
 	Keys         struct {
-		Ethereum ConfigEthKeys `validate:"required"`
-		BabyJub  struct {
+		// Ethereum ConfigEthKeys `validate:"required"`
+		BabyJub struct {
 			KOp babyjub.PublicKey `validate:"required"`
 		} `validate:"required"`
 	} `validate:"required"`
@@ -62,12 +62,12 @@ type Config struct {
 	Storage   struct {
 		Path string
 	} `validate:"required"`
-	Names struct {
-		Path string `validate:"required"`
-	} `validate:"required"`
-	Entitites struct {
-		Path string `validate:"required"`
-	} `validate:"required"`
+	// Names struct {
+	// 	Path string `validate:"required"`
+	// } `validate:"required"`
+	// Entitites struct {
+	// 	Path string `validate:"required"`
+	// } `validate:"required"`
 }
 
 func LoadFromCliFlag(c *cli.Context, cfg interface{}) error {
@@ -79,7 +79,10 @@ func LoadFromCliFlag(c *cli.Context, cfg interface{}) error {
 	if err != nil {
 		return err
 	}
-	return Load(string(bs), &cfg)
+	if err := Load(string(bs), cfg); err != nil {
+		return fmt.Errorf("Error loading configuration from cli flag: %w", err)
+	}
+	return nil
 }
 
 func Load(cfgToml string, cfg interface{}) error {
@@ -87,5 +90,8 @@ func Load(cfgToml string, cfg interface{}) error {
 		return err
 	}
 	validate := validator.New()
-	return validate.Struct(cfg)
+	if err := validate.Struct(cfg); err != nil {
+		return fmt.Errorf("Error validating configuration file: %w", err)
+	}
+	return nil
 }

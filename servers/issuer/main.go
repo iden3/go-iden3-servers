@@ -5,14 +5,14 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/iden3/go-iden3-servers/servers/claimserver/commands"
+	"github.com/iden3/go-iden3-servers/servers/issuer/commands"
 	"github.com/urfave/cli"
 )
 
 func main() {
 
 	app := cli.NewApp()
-	app.Name = "claimserveri3"
+	app.Name = "issuer-iden3"
 	app.Version = "0.1.0-alpha"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{Name: "config"},
