@@ -1,0 +1,28 @@
+[Identity]
+  Id = "117D1GdPubM5NrwTH2Da44SMQFndg87m6kwVQTswLZ"
+  [Identity.Keys]
+    [Identity.Keys.BabyJub]
+      KOp = "113f58c1c4a105505cdef91cf4116499ad78aed80c80bef1798b477b7152d49d"
+
+[Server]
+  ServiceApi = "0.0.0.0:6000"
+  AdminApi = "0.0.0.0:6001"
+
+[Web3]
+  Url = "http://127.0.0.1:8545"
+
+[KeyStore]
+  Path = "/tmp/iden3-test/issuer/keystore"
+  Password = "/tmp/iden3-test/issuer/keystore.password"
+
+[KeyStoreBaby]
+  Path = "/tmp/iden3-test/issuer/keystorebaby"
+  Password = "/tmp/iden3-test/issuer/keystorebaby.password"
+
+[Contracts]
+  [Contracts.IdenStates]
+    JsonABI = "/compiled_contracts/rootcmt.json"
+    Address = "0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe"
+
+[Storage]
+  Path = "/tmp/iden3-test/issuer/storage"

@@ -5,7 +5,7 @@ import (
 
 	"github.com/iden3/go-iden3-servers/cmd"
 	"github.com/iden3/go-iden3-servers/config"
-	"github.com/iden3/go-iden3-servers/servers/claimserver/endpoint"
+	"github.com/iden3/go-iden3-servers/servers/issuer/endpoint"
 )
 
 var ServerCommands = []cli.Command{
@@ -13,7 +13,7 @@ var ServerCommands = []cli.Command{
 		Name:    "init",
 		Aliases: []string{},
 		Usage:   "create keys and identity for the server",
-		Action:  cmd.WithCfg(cmd.CmdNewIdentity),
+		Action:  cmd.CmdNewIdentity,
 	},
 	{
 		Name:    "start",
@@ -24,15 +24,21 @@ var ServerCommands = []cli.Command{
 		}),
 	},
 	{
-		Name:    "stop",
+		Name:    "sync",
 		Aliases: []string{},
-		Usage:   "stops the server",
-		Action:  cmd.WithCfg(cmd.CmdStop),
+		Usage:   "sync the identity state with the smart contract",
+		Action:  cmd.WithCfg(cmd.CmdSync),
 	},
-	{
-		Name:    "info",
-		Aliases: []string{},
-		Usage:   "server status",
-		Action:  cmd.WithCfg(cmd.CmdInfo),
-	},
+	// {
+	// 	Name:    "stop",
+	// 	Aliases: []string{},
+	// 	Usage:   "stops the server",
+	// 	Action:  cmd.WithCfg(cmd.CmdStop),
+	// },
+	// {
+	// 	Name:    "info",
+	// 	Aliases: []string{},
+	// 	Usage:   "server status",
+	// 	Action:  cmd.WithCfg(cmd.CmdInfo),
+	// },
 }
