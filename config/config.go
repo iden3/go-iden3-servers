@@ -42,24 +42,33 @@ type ConfigContracts struct {
 	// Iden3Proxy    ConfigContract `validate:"required"`
 }
 
+type ConfigKeysBabyJub struct {
+	KOp babyjub.PublicKey `validate:"required"`
+}
+
+type ConfigIdentity struct {
+	Id   core.ID `validate:"required"`
+	Keys struct {
+		// Ethereum ConfigEthKeys `validate:"required"`
+		BabyJub ConfigKeysBabyJub `validate:"required"`
+	} `validate:"required"`
+}
+
 type Config struct {
-	Id core.ID `validate:"required"`
+	Identity ConfigIdentity `validate:"required"`
 	// Domain    string       `validate:"required"`
 	// Namespace string       `validate:"required"`
 	Server ConfigServer `validate:"required"`
 	Web3   struct {
 		Url string `validate:"required"`
 	} `validate:"required"`
-	KeyStore     ConfigKeyStore `validate:"required"`
-	KeyStoreBaby ConfigKeyStore `validate:"required"`
-	Keys         struct {
-		// Ethereum ConfigEthKeys `validate:"required"`
-		BabyJub struct {
-			KOp babyjub.PublicKey `validate:"required"`
-		} `validate:"required"`
+	KeyStore     ConfigKeyStore  `validate:"required"`
+	KeyStoreBaby ConfigKeyStore  `validate:"required"`
+	Contracts    ConfigContracts `validate:"required"`
+	Account      struct {
+		Address common.Address `validate:"required"`
 	} `validate:"required"`
-	Contracts ConfigContracts `validate:"required"`
-	Storage   struct {
+	Storage struct {
 		Path string
 	} `validate:"required"`
 	// Names struct {

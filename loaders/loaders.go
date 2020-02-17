@@ -147,16 +147,16 @@ func LoadStorage(storagePath string) (db.Storage, error) {
 	return storage, nil
 }
 
-func LoadMerkele(storage db.Storage) (*merkletree.MerkleTree, error) {
-	mtstorage := storage.WithPrefix(dbMerkletreePrefix)
-	mt, err := merkletree.NewMerkleTree(mtstorage, 140)
-	if err != nil {
-		return nil, fmt.Errorf("Error opening merkle tree: %w", err)
-	}
-	log.WithField("hash", mt.RootKey().Hex()).Info("Current root")
-
-	return mt, nil
-}
+// func LoadMerkele(storage db.Storage) (*merkletree.MerkleTree, error) {
+// 	mtstorage := storage.WithPrefix(dbMerkletreePrefix)
+// 	mt, err := merkletree.NewMerkleTree(mtstorage, 140)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("Error opening merkle tree: %w", err)
+// 	}
+// 	log.WithField("hash", mt.RootKey().Hex()).Info("Current root")
+//
+// 	return mt, nil
+// }
 
 func LoadContract(client eth.Client, jsonabifile string, address *common.Address) (*eth.Contract, error) {
 	abiFile, err := os.Open(jsonabifile)
@@ -258,7 +258,7 @@ type Server struct {
 
 func LoadServer(cfg *config.Config) (*Server, error) {
 	// ks, acc := LoadKeyStore(&cfg.KeyStore, &cfg.Keys.Ethereum)
-	ksBaby, kOp := LoadKeyStoreBabyJub(&cfg.KeyStoreBaby, &cfg.Keys.BabyJub.KOp)
+	ksBaby, kOp := LoadKeyStoreBabyJub(&cfg.KeyStoreBaby, &cfg.Identity.Keys.BabyJub.KOp)
 	pk, err := kOp.Decompress()
 	if err != nil {
 		return nil, err
@@ -277,22 +277,24 @@ func LoadServer(cfg *config.Config) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	mt, err := LoadMerkele(storage)
-	if err != nil {
-		return nil, err
-	}
+	// mt, err := LoadMerkele(storage)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	is, err := LoadIssuer(&cfg.Id, storage, ksBaby, idenPubOnChain, nil)
+	println("AAA")
+	is, err := LoadIssuer(&cfg.Identity.Id, storage, ksBaby, idenPubOnChain, nil)
 	if err != nil {
 		return nil, err
 	}
+	println("BBB")
 
 	// proofClaims := LoadGenesis(mt, &cfg.Id, &cfg.Keys.BabyJub.KOp, &cfg.Keys.Ethereum)
 	// kUpdateMtp := proofClaims.KUpdateRoot.Proof.Mtp0.Bytes()
 
 	return &Server{
-		Issuer:         is,
-		Mt:             mt,
+		Issuer: is,
+		// Mt:             mt,
 		IdenPubOnChain: idenPubOnChain,
 		// KeyStore:       ks,
 		KeyStore:     nil,

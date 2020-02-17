@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BurntSushi/toml"
 	common3 "github.com/iden3/go-iden3-core/common"
 	"github.com/iden3/go-iden3-core/db"
 	"github.com/iden3/go-iden3-core/identity/issuer"
@@ -246,15 +247,15 @@ func NewIssuer(storagePath, keyStoreBabyPath, keyStoreBabyPassword string) error
 	defer keyStore.Close()
 
 	// Create babyjub keys
-	kOp, err := keyStore.NewKey([]byte(keyStoreBabyPassword))
-	if err = keyStore.UnlockKey(kOp, []byte(keyStoreBabyPassword)); err != nil {
+	kOpComp, err := keyStore.NewKey([]byte(keyStoreBabyPassword))
+	if err = keyStore.UnlockKey(kOpComp, []byte(keyStoreBabyPassword)); err != nil {
 		return err
 	}
 
 	// Create the Issuer in a memory db and later transfer it to the storage under the identity prefix
 	memStorage := db.NewMemoryStorage()
 	cfg := issuer.ConfigDefault
-	is, err := issuer.New(cfg, kOp, nil, memStorage, keyStore, nil, nil)
+	is, err := issuer.New(cfg, kOpComp, nil, memStorage, keyStore, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -282,18 +283,40 @@ func NewIssuer(storagePath, keyStoreBabyPath, keyStoreBabyPassword string) error
 		return err
 	}
 
-	var m bytes.Buffer
-	fmt.Fprintf(&m, "Id = %v\n", id.String())
-	fmt.Fprintf(&m, "KOp = %v\n", kOp.String())
+	var config struct {
+		Identity config.ConfigIdentity
+	}
+	config.Identity.Id = *id
+	kOp, err := kOpComp.Decompress()
+	if err != nil {
+		return err
+	}
+	config.Identity.Keys.BabyJub.KOp = *kOp
+
+	var configTOML bytes.Buffer
+	if err := toml.NewEncoder(&configTOML).Encode(&config); err != nil {
+		return nil
+	}
 
 	fmt.Fprintf(os.Stderr, "Keys and identity created successfully."+
 		" Copy & paste the lines between '---' into the config file:\n---\n")
-	fmt.Print(m.String())
+	fmt.Print(configTOML.String())
 	fmt.Fprintf(os.Stderr, "---\n")
 	return nil
 }
 
-func CmdNewIdentity(c *cli.Context, cfg *config.Config) error {
+func CmdNewIdentity(c *cli.Context) error {
+	var cfg struct {
+		KeyStore     config.ConfigKeyStore  `validate:"required"`
+		KeyStoreBaby config.ConfigKeyStore  `validate:"required"`
+		Contracts    config.ConfigContracts `validate:"required"`
+		Storage      struct {
+			Path string
+		} `validate:"required"`
+	}
+	if err := config.LoadFromCliFlag(c, &cfg); err != nil {
+		return err
+	}
 	return NewIssuer(cfg.Storage.Path, cfg.KeyStoreBaby.Path, cfg.KeyStoreBaby.Password)
 }
 
@@ -313,28 +336,26 @@ func CmdInfo(c *cli.Context, cfg *config.Config) error {
 	return err
 }
 
-// func CmdStart(c *cli.Context, cfg *config.Config, endpointServe func(cfg *config.Config, iden *loaders.Identity)) error {
-// 	iden, err := loaders.LoadIdentity(cfg)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	// Check for funds
-// 	balance, err := iden.Web3.BalanceAt(iden.Web3.Account().Address)
-// 	if err != nil {
-// 		log.Panic(err)
-// 	}
-// 	log.WithFields(log.Fields{
-// 		"balance": balance.String(),
-// 		"address": iden.Web3.Account().Address.Hex(),
-// 	}).Info("Account balance retrieved")
-// 	if balance.Int64() < 3000000 {
-// 		log.Panic("Not enough funds in the relay address")
-// 	}
-//
-// 	endpointServe(cfg, iden)
-//
-// 	iden.StateWriter.StopAndJoin()
-//
-// 	return nil
-// }
+func CmdStart(c *cli.Context, cfg *config.Config, endpointServe func(cfg *config.Config, srv *loaders.Server)) error {
+	srv, err := loaders.LoadServer(cfg)
+	if err != nil {
+		return err
+	}
+
+	// Check for funds
+	balance, err := srv.Web3.BalanceAt(srv.Web3.Account().Address)
+	if err != nil {
+		return err
+	}
+	log.WithFields(log.Fields{
+		"balance": balance.String(),
+		"address": srv.Web3.Account().Address.Hex(),
+	}).Info("Account balance retrieved")
+	if balance.Int64() < 3000000 {
+		return fmt.Errorf("Not enough funds in the ethereum address")
+	}
+
+	endpointServe(cfg, srv)
+
+	return nil
+}

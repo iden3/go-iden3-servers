@@ -8,6 +8,7 @@ import (
 )
 
 var cfgTomlGood = `
+[Identity]
 Id = "113kyY52PSBr9oUqosmYkCavjjrQFuiuAw47FpZeUf"
 
 [Server]
@@ -48,9 +49,9 @@ ServiceApi = "0.0.0.0:6000"
 
 func TestLoad(t *testing.T) {
 	var cfg0 struct {
-		Id     core.ID
-		Server ConfigServer
-		Web3   struct {
+		Identity ConfigIdentity
+		Server   ConfigServer
+		Web3     struct {
 			Url string
 		}
 		Contracts struct {
