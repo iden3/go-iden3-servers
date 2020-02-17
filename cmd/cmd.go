@@ -320,20 +320,27 @@ func CmdNewIdentity(c *cli.Context) error {
 	return NewIssuer(cfg.Storage.Path, cfg.KeyStoreBaby.Path, cfg.KeyStoreBaby.Password)
 }
 
-func CmdStop(c *cli.Context, cfg *config.Config) error {
-	output, err := PostAdminApi(cfg.Server.AdminApi, "stop")
-	if err == nil {
-		log.Info("Server response: ", output)
-	}
-	return err
-}
+// func CmdStop(c *cli.Context, cfg *config.Config) error {
+// 	output, err := PostAdminApi(cfg.Server.AdminApi, "stop")
+// 	if err == nil {
+// 		log.Info("Server response: ", output)
+// 	}
+// 	return err
+// }
 
-func CmdInfo(c *cli.Context, cfg *config.Config) error {
-	output, err := PostAdminApi(cfg.Server.AdminApi, "info")
-	if err == nil {
-		log.Info("Server response: ", output)
+// func CmdInfo(c *cli.Context, cfg *config.Config) error {
+// 	output, err := PostAdminApi(cfg.Server.AdminApi, "info")
+// 	if err == nil {
+// 		log.Info("Server response: ", output)
+// 	}
+// 	return err
+// }
+
+func CmdSync(c *cli.Context, cfg *config.Config) error {
+	if err := PostAdminApi(&cfg.Server, "issuer/syncidenstatepublic", nil); err != nil {
+		return err
 	}
-	return err
+	return nil
 }
 
 func CmdStart(c *cli.Context, cfg *config.Config, endpointServe func(cfg *config.Config, srv *loaders.Server)) error {

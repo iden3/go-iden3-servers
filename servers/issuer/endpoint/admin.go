@@ -1,17 +1,27 @@
 package endpoint
 
 import (
-// "errors"
-// "net/http"
-
-// "github.com/gin-gonic/gin"
-// common3 "github.com/iden3/go-iden3-core/common"
-// "github.com/iden3/go-iden3-servers/cmd/genericserver"
+	"github.com/gin-gonic/gin"
+	"github.com/iden3/go-iden3-servers/handlers"
+	"github.com/iden3/go-iden3-servers/loaders"
+	// "errors"
+	// "net/http"
+	// "github.com/gin-gonic/gin"
+	// common3 "github.com/iden3/go-iden3-core/common"
+	// "github.com/iden3/go-iden3-servers/cmd/genericserver"
 )
 
 type addClaimBasicMsg struct {
 	IndexData string
 	Data      string
+}
+
+func handleSyncIdenStatePublic(c *gin.Context, srv *loaders.Server) {
+	if err := srv.Issuer.SyncIdenStatePublic(); err != nil {
+		handlers.Fail(c, "SyncIdenStatePublic", err)
+		return
+	}
+	c.JSON(200, gin.H{})
 }
 
 // DEPRECATED

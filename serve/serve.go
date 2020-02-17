@@ -17,8 +17,15 @@ func WithServer(srv *loaders.Server, handler func(c *gin.Context, srv *loaders.S
 	}
 }
 
+func handleNoRoute(c *gin.Context) {
+	c.JSON(404, gin.H{
+		"error": "404 page not found",
+	})
+}
+
 func NewServiceAPI(prefix string, srv *loaders.Server) (*gin.Engine, *gin.RouterGroup) {
 	api := gin.Default()
+	api.NoRoute(handleNoRoute)
 	api.Use(cors.Default())
 
 	serviceapi := api.Group(prefix)
@@ -29,6 +36,7 @@ func NewServiceAPI(prefix string, srv *loaders.Server) (*gin.Engine, *gin.Router
 
 func NewAdminAPI(prefix string, stopch chan interface{}, srv *loaders.Server) (*gin.Engine, *gin.RouterGroup) {
 	api := gin.Default()
+	api.NoRoute(handleNoRoute)
 	api.Use(cors.Default())
 	adminapi := api.Group("/api/unstable")
 

@@ -23,6 +23,12 @@ var ServerCommands = []cli.Command{
 			return cmd.CmdStart(c, cfg, endpoint.Serve)
 		}),
 	},
+	{
+		Name:    "sync",
+		Aliases: []string{},
+		Usage:   "sync the identity state with the smart contract",
+		Action:  cmd.WithCfg(cmd.CmdSync),
+	},
 	// {
 	// 	Name:    "stop",
 	// 	Aliases: []string{},

@@ -2,6 +2,7 @@ package loaders
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -32,62 +33,69 @@ const (
 	filePrefix   = "file:"
 )
 
-// func LoadKeyStore(cfgKeyStore *config.ConfigKeyStore, cfgEthKeys *config.ConfigEthKeys) (*ethkeystore.KeyStore, accounts.Account) {
-// 	var err error
-// 	var passwd string
-//
-// 	// Load keystore
-// 	ks := ethkeystore.NewKeyStore(cfgKeyStore.Path, ethkeystore.StandardScryptN, ethkeystore.StandardScryptP)
-//
-// 	// Password can be prefixed by two options
-// 	//   file: <path to file containing the password>
-// 	//   passwd: raw password
-// 	// if is not prefixed by any of those, file: is used
-// 	// TODO: Handle the literal password / file password with a configuration type
-// 	if strings.HasPrefix(cfgKeyStore.Password, passwdPrefix) {
-// 		passwd = cfgKeyStore.Password[len(passwdPrefix):]
-// 	} else {
-// 		filename := cfgKeyStore.Password
-// 		if strings.HasPrefix(filename, filePrefix) {
-// 			filename = cfgKeyStore.Password[len(filePrefix):]
-// 		}
-// 		passwdbytes, err := ioutil.ReadFile(filename)
-// 		Assert("Cannot read password", err)
-// 		passwd = string(passwdbytes)
-// 	}
-//
-// 	acc, err := ks.Find(accounts.Account{
-// 		Address: cfgEthKeys.KUpdateRoot,
-// 	})
-// 	Assert("Cannot find keystore account", err)
-// 	// KDis and KReen not used yet, but need to check if they exist
-// 	_, err = ks.Find(accounts.Account{
-// 		Address: cfgEthKeys.KDis,
-// 	})
-// 	Assert("Cannot find keystore account", err)
-// 	_, err = ks.Find(accounts.Account{
-// 		Address: cfgEthKeys.KReen,
-// 	})
-// 	Assert("Cannot find keystore account", err)
-//
-// 	Assert("Cannot unlock account", ks.Unlock(acc, string(passwd)))
-// 	log.WithField("acc", acc.Address.Hex()).Info("Keystore and account unlocked successfully")
-//
-// 	return ks, acc
-// }
+func LoadKeyStore(cfgKeyStore *config.ConfigKeyStore, accountAddr *common.Address) (*ethkeystore.KeyStore, *accounts.Account, error) {
+	var err error
+	var passwd string
 
-func LoadKeyStoreBabyJub(cfgKeyStore *config.ConfigKeyStore, kOp *babyjub.PublicKey) (*babykeystore.KeyStore, *babyjub.PublicKeyComp) {
+	// Load keystore
+	ks := ethkeystore.NewKeyStore(cfgKeyStore.Path, ethkeystore.StandardScryptN, ethkeystore.StandardScryptP)
+
+	// Password can be prefixed by two options
+	//   file: <path to file containing the password>
+	//   passwd: raw password
+	// if is not prefixed by any of those, file: is used
+	// TODO: Handle the literal password / file password with a configuration type
+	if strings.HasPrefix(cfgKeyStore.Password, passwdPrefix) {
+		passwd = cfgKeyStore.Password[len(passwdPrefix):]
+	} else {
+		filename := cfgKeyStore.Password
+		if strings.HasPrefix(filename, filePrefix) {
+			filename = cfgKeyStore.Password[len(filePrefix):]
+		}
+		passwdbytes, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return nil, nil, fmt.Errorf("Cannot read password: %w", err)
+		}
+		passwd = string(passwdbytes)
+	}
+
+	acc, err := ks.Find(accounts.Account{
+		Address: *accountAddr,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("Cannot find keystore account: %w", err)
+	}
+	// KDis and KReen not used yet, but need to check if they exist
+	// _, err = ks.Find(accounts.Account{
+	// 	Address: cfgEthKeys.KDis,
+	// })
+	// Assert("Cannot find keystore account", err)
+	// _, err = ks.Find(accounts.Account{
+	// 	Address: cfgEthKeys.KReen,
+	// })
+	// Assert("Cannot find keystore account", err)
+
+	if err := ks.Unlock(acc, string(passwd)); err != nil {
+		return nil, nil, fmt.Errorf("Cannot unlock account: %w", err)
+	}
+	log.WithField("acc", acc.Address.Hex()).Info("Keystore and account unlocked successfully")
+
+	return ks, &acc, nil
+}
+
+func LoadKeyStoreBabyJub(cfgKeyStore *config.ConfigKeyStore, kOp *babyjub.PublicKey) (*babykeystore.KeyStore, error) {
 	storage := babykeystore.NewFileStorage(cfgKeyStore.Path)
 	ks, err := babykeystore.NewKeyStore(storage, babykeystore.StandardKeyStoreParams)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("Error creating/opening babyjub keystore: %w", err)
 	}
 	if kOp != nil {
 		kOpComp := kOp.Compress()
 		if err := ks.UnlockKey(&kOpComp, []byte(cfgKeyStore.Password)); err != nil {
-			panic(err)
+			return nil, fmt.Errorf("Error unlocking babyjub key from keystore: %w", err)
 		}
-		return ks, &kOpComp
+		log.WithField("kOp", kOpComp.String()).Info("Babyjub Keystore and key unlocked successfully")
+		return ks, nil
 	} else {
 		return ks, nil
 	}
@@ -112,7 +120,6 @@ func LoadEthClient2(ks *ethkeystore.KeyStore, acc *accounts.Account, web3Url str
 }
 
 func LoadIdenPubOnChain(client *eth.Client2, idenStatesAddress common.Address) idenpubonchain.IdenPubOnChainer {
-
 	addresses := idenpubonchain.ContractAddresses{
 		IdenStates: idenStatesAddress,
 	}
@@ -168,6 +175,7 @@ func LoadContract(client eth.Client, jsonabifile string, address *common.Address
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing contract %s: %w", jsonabifile, err)
 	}
+	log.WithField("jsonabifile", jsonabifile).Info("Contract loaded successfully")
 
 	return eth.NewContract(client, abi, code, address), nil
 }
@@ -189,8 +197,9 @@ func LoadIssuer(id *core.ID, storage db.Storage, keyStore *babykeystore.KeyStore
 	idenStorage := storage.WithPrefix([]byte(fmt.Sprintf("%v:", id)))
 	is, err := issuer.Load(idenStorage, keyStore, idenPubOnChain, idenPubOffChainWrite)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error loading issuer: %w", err)
 	}
+	log.WithField("id", id).Info("Issuer loaded successfully")
 	return is, nil
 }
 
@@ -257,18 +266,21 @@ type Server struct {
 }
 
 func LoadServer(cfg *config.Config) (*Server, error) {
-	// ks, acc := LoadKeyStore(&cfg.KeyStore, &cfg.Keys.Ethereum)
-	ksBaby, kOp := LoadKeyStoreBabyJub(&cfg.KeyStoreBaby, &cfg.Identity.Keys.BabyJub.KOp)
-	pk, err := kOp.Decompress()
+	ks, acc, err := LoadKeyStore(&cfg.KeyStore, &cfg.Account.Address)
 	if err != nil {
 		return nil, err
 	}
-	client, err := LoadWeb3(nil, nil, cfg.Web3.Url)
+	kOp := &cfg.Identity.Keys.BabyJub.KOp
+	ksBaby, err := LoadKeyStoreBabyJub(&cfg.KeyStoreBaby, kOp)
 	if err != nil {
 		return nil, err
 	}
-	// client2 := LoadEthClient2(ks, &acc, cfg.Web3.Url)
-	client2, err := LoadEthClient2(nil, nil, cfg.Web3.Url)
+	client, err := LoadWeb3(ks, acc, cfg.Web3.Url)
+	if err != nil {
+		return nil, err
+	}
+	client2, err := LoadEthClient2(ks, acc, cfg.Web3.Url)
+	// client2, err := LoadEthClient2(nil, nil, cfg.Web3.Url)
 	if err != nil {
 		return nil, err
 	}
@@ -282,12 +294,10 @@ func LoadServer(cfg *config.Config) (*Server, error) {
 	// 	return nil, err
 	// }
 
-	println("AAA")
 	is, err := LoadIssuer(&cfg.Identity.Id, storage, ksBaby, idenPubOnChain, nil)
 	if err != nil {
 		return nil, err
 	}
-	println("BBB")
 
 	// proofClaims := LoadGenesis(mt, &cfg.Id, &cfg.Keys.BabyJub.KOp, &cfg.Keys.Ethereum)
 	// kUpdateMtp := proofClaims.KUpdateRoot.Proof.Mtp0.Bytes()
@@ -301,6 +311,6 @@ func LoadServer(cfg *config.Config) (*Server, error) {
 		KeyStoreBaby: ksBaby,
 		Web3:         client,
 		EthClient2:   client2,
-		KOp:          pk,
+		KOp:          kOp,
 	}, nil
 }

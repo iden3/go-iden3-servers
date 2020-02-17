@@ -21,18 +21,18 @@ func init() {
 // serveServiceApi start service api calls.
 func serveServiceApi(addr string, srv *loaders.Server) *http.Server {
 	// api, serviceapi := serve.NewServiceAPI("/api/unstable", srv)
+	api, _ := serve.NewServiceAPI("/api/unstable", srv)
 	// serviceapi.POST("/claims", serve.WithServer(srv, handlePostClaim))                  // Get relay claim proof
 	// serviceapi.GET("/claims/:hi/proof", serve.WithServer(srv, handleGetClaimProofByHi)) // Get relay claim proof
 
-	// serviceapisrv := &http.Server{Addr: addr, Handler: api}
+	serviceapisrv := &http.Server{Addr: addr, Handler: api}
 	// go func() {
 	// 	if err := serve.ListenAndServe(serviceapisrv, "Service"); err != nil &&
 	// 		err != http.ErrServerClosed {
 	// 		log.Fatalf("listen: %s\n", err)
 	// 	}
 	// }()
-	// return serviceapisrv
-	return nil
+	return serviceapisrv
 }
 
 // serveAdminApi start admin api calls.
@@ -43,6 +43,7 @@ func serveAdminApi(addr string, stopch chan interface{}, srv *loaders.Server) *h
 	}
 	// DEPRECATED
 	// adminapi.POST("/claims/basic", serve.WithServer(srv, handleAddClaimBasic))
+	adminapi.POST("/issuer/syncidenstatepublic", serve.WithServer(srv, handleSyncIdenStatePublic))
 
 	adminapisrv := &http.Server{Addr: addr, Handler: api}
 	go func() {
