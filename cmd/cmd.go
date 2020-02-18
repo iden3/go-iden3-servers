@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"github.com/ethereum/go-ethereum/common"
 	common3 "github.com/iden3/go-iden3-core/common"
 	"github.com/iden3/go-iden3-core/db"
 	"github.com/iden3/go-iden3-core/identity/issuer"
@@ -305,7 +307,7 @@ func NewIssuer(storagePath, keyStoreBabyPath, keyStoreBabyPassword string) error
 	return nil
 }
 
-func CmdNewIdentity(c *cli.Context) error {
+func CmdNewIssuer(c *cli.Context) error {
 	var cfg struct {
 		KeyStore     config.ConfigKeyStore  `validate:"required"`
 		KeyStoreBaby config.ConfigKeyStore  `validate:"required"`
@@ -363,6 +365,40 @@ func CmdStart(c *cli.Context, cfg *config.Config, endpointServe func(cfg *config
 	}
 
 	endpointServe(cfg, srv)
+
+	return nil
+}
+
+func CmdNewEthAccount(c *cli.Context) error {
+	var cfg struct {
+		KeyStore config.ConfigKeyStore `validate:"required"`
+	}
+	if err := config.LoadFromCliFlag(c, &cfg); err != nil {
+		return err
+	}
+
+	ks := keystore.NewKeyStore(cfg.KeyStore.Path, keystore.StandardScryptN, keystore.StandardScryptP)
+	account, err := ks.NewAccount(cfg.KeyStore.Password)
+	if err != nil {
+		return err
+	}
+
+	var config struct {
+		Account struct {
+			Address common.Address
+		}
+	}
+	config.Account.Address = account.Address
+
+	var configTOML bytes.Buffer
+	if err := toml.NewEncoder(&configTOML).Encode(&config); err != nil {
+		return nil
+	}
+
+	fmt.Fprintf(os.Stderr, "Ethereum Account created successfully."+
+		" Copy & paste the lines between '---' into the config file:\n---\n")
+	fmt.Print(configTOML.String())
+	fmt.Fprintf(os.Stderr, "---\n")
 
 	return nil
 }

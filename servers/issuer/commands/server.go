@@ -13,7 +13,7 @@ var ServerCommands = []cli.Command{
 		Name:    "init",
 		Aliases: []string{},
 		Usage:   "create keys and identity for the server",
-		Action:  cmd.CmdNewIdentity,
+		Action:  cmd.CmdNewIssuer,
 	},
 	{
 		Name:    "start",
@@ -41,4 +41,10 @@ var ServerCommands = []cli.Command{
 	// 	Usage:   "server status",
 	// 	Action:  cmd.WithCfg(cmd.CmdInfo),
 	// },
+	{
+		Name:    "newethaccount",
+		Aliases: []string{},
+		Usage:   "create new Eth Account Address",
+		Action:  cmd.CmdNewEthAccount,
+	},
 }
