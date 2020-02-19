@@ -9,8 +9,10 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	common3 "github.com/iden3/go-iden3-core/common"
 	"github.com/iden3/go-iden3-core/db"
 	"github.com/iden3/go-iden3-core/identity/issuer"
@@ -373,6 +375,43 @@ func CmdStart(c *cli.Context, cfg *config.Config, endpointServe func(cfg *config
 	return nil
 }
 
+func CmdImportEthAccount(c *cli.Context) error {
+	keyfile := c.Args().First()
+	if len(keyfile) == 0 {
+		return fmt.Errorf("keyfile must be given as argument")
+	}
+	key, err := crypto.LoadECDSA(keyfile)
+	if err != nil {
+		return err
+	}
+
+	var cfg struct {
+		KeyStore config.ConfigKeyStore `validate:"required"`
+	}
+	if err := config.LoadFromCliFlag(c, &cfg); err != nil {
+		return err
+	}
+
+	ks := keystore.NewKeyStore(cfg.KeyStore.Path, keystore.StandardScryptN, keystore.StandardScryptP)
+
+	account, err := ks.ImportECDSA(key, cfg.KeyStore.Password)
+	if err != nil {
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"keyfile": keyfile,
+		"path":    cfg.KeyStore.Path,
+		"address": account.Address.Hex(),
+	}).Info("Imported Eth Account from private key")
+
+	fmt.Fprintf(os.Stderr, "Ethereum Account imported successfully."+
+		" Copy & paste the lines between '---' into the config file:\n")
+	printAccountToml(account)
+
+	return nil
+}
+
 func CmdNewEthAccount(c *cli.Context) error {
 	var cfg struct {
 		KeyStore config.ConfigKeyStore `validate:"required"`
@@ -387,6 +426,19 @@ func CmdNewEthAccount(c *cli.Context) error {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"path":    cfg.KeyStore.Path,
+		"address": account.Address.Hex(),
+	}).Info("Created new Eth Account")
+
+	fmt.Fprintf(os.Stderr, "Ethereum Account created successfully."+
+		" Copy & paste the lines between '---' into the config file:\n")
+	printAccountToml(account)
+
+	return nil
+}
+
+func printAccountToml(account accounts.Account) {
 	var config struct {
 		Account struct {
 			Address common.Address
@@ -396,13 +448,10 @@ func CmdNewEthAccount(c *cli.Context) error {
 
 	var configTOML bytes.Buffer
 	if err := toml.NewEncoder(&configTOML).Encode(&config); err != nil {
-		return nil
+		log.Error(err)
 	}
 
-	fmt.Fprintf(os.Stderr, "Ethereum Account created successfully."+
-		" Copy & paste the lines between '---' into the config file:\n---\n")
+	fmt.Fprintf(os.Stderr, "\n---\n")
 	fmt.Print(configTOML.String())
 	fmt.Fprintf(os.Stderr, "---\n")
-
-	return nil
 }
