@@ -42,9 +42,19 @@ var ServerCommands = []cli.Command{
 	// 	Action:  cmd.WithCfg(cmd.CmdInfo),
 	// },
 	{
-		Name:    "newethaccount",
-		Aliases: []string{},
-		Usage:   "create new Eth Account Address",
-		Action:  cmd.CmdNewEthAccount,
+		Name:  "eth",
+		Usage: "create and manage eth wallet",
+		Subcommands: []cli.Command{{
+			Name:    "new",
+			Aliases: []string{},
+			Usage:   "create new Eth Account Address",
+			Action:  cmd.CmdNewEthAccount,
+		},
+			{
+				Name:    "import",
+				Aliases: []string{},
+				Usage:   "import Eth Account Private Key",
+				Action:  cmd.CmdImportEthAccount,
+			}},
 	},
 }
