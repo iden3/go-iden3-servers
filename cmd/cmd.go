@@ -364,7 +364,11 @@ func CmdStart(c *cli.Context, cfg *config.Config, endpointServe func(cfg *config
 		return fmt.Errorf("Not enough funds in the ethereum address")
 	}
 
+	srv.Start()
+
 	endpointServe(cfg, srv)
+
+	srv.StopAndJoin()
 
 	return nil
 }

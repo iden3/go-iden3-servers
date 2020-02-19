@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts"
 	ethkeystore "github.com/ethereum/go-ethereum/accounts/keystore"
@@ -254,15 +255,65 @@ func LoadIssuer(id *core.ID, storage db.Storage, keyStore *babykeystore.KeyStore
 // }
 
 type Server struct {
-	Id             core.ID
-	Mt             *merkletree.MerkleTree
-	Issuer         *issuer.Issuer
-	IdenPubOnChain idenpubonchain.IdenPubOnChainer
-	KeyStore       *ethkeystore.KeyStore
-	KeyStoreBaby   *babykeystore.KeyStore
-	Web3           *eth.Web3Client
-	EthClient2     *eth.Client2
-	KOp            *babyjub.PublicKey
+	Cfg              *config.Config
+	stopchPublish    chan (interface{})
+	stoppedchPublish chan (interface{})
+	stopchSync       chan (interface{})
+	stoppedchSync    chan (interface{})
+	Id               core.ID
+	Mt               *merkletree.MerkleTree
+	Issuer           *issuer.Issuer
+	IdenPubOnChain   idenpubonchain.IdenPubOnChainer
+	KeyStore         *ethkeystore.KeyStore
+	KeyStoreBaby     *babykeystore.KeyStore
+	Web3             *eth.Web3Client
+	EthClient2       *eth.Client2
+	KOp              *babyjub.PublicKey
+}
+
+func (s *Server) Start() error {
+	log.Info("Starting Issuer Server")
+	go func() {
+		log.Info("Starting periodic Issuer PublishState")
+		for {
+			select {
+			case <-s.stopchPublish:
+				log.Info("Issuer server finalized")
+				s.stoppedchPublish <- nil
+				return
+			case <-time.After(s.Cfg.Issuer.PublishStatePeriod):
+				if err := s.Issuer.PublishState(); err != nil {
+					log.Error(fmt.Errorf("Error on Issuer.PublishState: %w", err))
+				}
+			}
+		}
+	}()
+	go func() {
+		log.Info("Starting periodic Issuer SyncIdenStatePublic")
+		for {
+			select {
+			case <-s.stopchSync:
+				log.Info("Issuer server finalized")
+				s.stoppedchSync <- nil
+				return
+			case <-time.After(s.Cfg.Issuer.SyncIdenStatePublicPeriod):
+				if err := s.Issuer.SyncIdenStatePublic(); err != nil {
+					log.Error(fmt.Errorf(
+						"Error on Issuer.SyncIdenStatePublicPeriod: %w", err))
+				}
+			}
+		}
+	}()
+	return nil
+}
+
+func (s *Server) StopAndJoin() {
+	go func() {
+		s.stopchPublish <- nil
+		s.stopchSync <- nil
+	}()
+	<-s.stoppedchPublish
+	<-s.stoppedchSync
 }
 
 func LoadServer(cfg *config.Config) (*Server, error) {
@@ -303,7 +354,12 @@ func LoadServer(cfg *config.Config) (*Server, error) {
 	// kUpdateMtp := proofClaims.KUpdateRoot.Proof.Mtp0.Bytes()
 
 	return &Server{
-		Issuer: is,
+		Cfg:              cfg,
+		stopchPublish:    make(chan (interface{})),
+		stoppedchPublish: make(chan (interface{})),
+		stopchSync:       make(chan (interface{})),
+		stoppedchSync:    make(chan (interface{})),
+		Issuer:           is,
 		// Mt:             mt,
 		IdenPubOnChain: idenPubOnChain,
 		// KeyStore:       ks,

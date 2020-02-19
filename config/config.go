@@ -5,6 +5,7 @@ import (
 	// common3 "github.com/iden3/go-iden3-core/common"
 	"fmt"
 	"io/ioutil"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/ethereum/go-ethereum/common"
@@ -71,6 +72,10 @@ type Config struct {
 	Storage struct {
 		Path string
 	} `validate:"required"`
+	Issuer struct {
+		PublishStatePeriod        time.Duration
+		SyncIdenStatePublicPeriod time.Duration
+	}
 	// Names struct {
 	// 	Path string `validate:"required"`
 	// } `validate:"required"`
