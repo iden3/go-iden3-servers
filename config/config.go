@@ -55,14 +55,16 @@ type ConfigIdentity struct {
 	} `validate:"required"`
 }
 
+type ConfigWeb3 struct {
+	Url string `validate:"required"`
+}
+
 type Config struct {
 	Identity ConfigIdentity `validate:"required"`
 	// Domain    string       `validate:"required"`
 	// Namespace string       `validate:"required"`
-	Server ConfigServer `validate:"required"`
-	Web3   struct {
-		Url string `validate:"required"`
-	} `validate:"required"`
+	Server       ConfigServer    `validate:"required"`
+	Web3         ConfigWeb3      `validate:"required"`
 	KeyStore     ConfigKeyStore  `validate:"required"`
 	KeyStoreBaby ConfigKeyStore  `validate:"required"`
 	Contracts    ConfigContracts `validate:"required"`
