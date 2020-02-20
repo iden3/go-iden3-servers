@@ -2,7 +2,6 @@ package loaders
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -36,7 +35,7 @@ const (
 
 func LoadKeyStore(cfgKeyStore *config.ConfigKeyStore, accountAddr *common.Address) (*ethkeystore.KeyStore, *accounts.Account, error) {
 	var err error
-	var passwd string
+	// var passwd string
 
 	// Load keystore
 	ks := ethkeystore.NewKeyStore(cfgKeyStore.Path, ethkeystore.StandardScryptN, ethkeystore.StandardScryptP)
@@ -46,19 +45,19 @@ func LoadKeyStore(cfgKeyStore *config.ConfigKeyStore, accountAddr *common.Addres
 	//   passwd: raw password
 	// if is not prefixed by any of those, file: is used
 	// TODO: Handle the literal password / file password with a configuration type
-	if strings.HasPrefix(cfgKeyStore.Password, passwdPrefix) {
-		passwd = cfgKeyStore.Password[len(passwdPrefix):]
-	} else {
-		filename := cfgKeyStore.Password
-		if strings.HasPrefix(filename, filePrefix) {
-			filename = cfgKeyStore.Password[len(filePrefix):]
-		}
-		passwdbytes, err := ioutil.ReadFile(filename)
-		if err != nil {
-			return nil, nil, fmt.Errorf("Cannot read password: %w", err)
-		}
-		passwd = string(passwdbytes)
-	}
+	//if strings.HasPrefix(cfgKeyStore.Password, passwdPrefix) {
+	//	passwd = cfgKeyStore.Password[len(passwdPrefix):]
+	//} else {
+	//	filename := cfgKeyStore.Password
+	//	if strings.HasPrefix(filename, filePrefix) {
+	//		filename = cfgKeyStore.Password[len(filePrefix):]
+	//	}
+	//	passwdbytes, err := ioutil.ReadFile(filename)
+	//	if err != nil {
+	//		return nil, nil, fmt.Errorf("Cannot read password: %w", err)
+	//	}
+	//	passwd = string(passwdbytes)
+	//}
 
 	acc, err := ks.Find(accounts.Account{
 		Address: *accountAddr,
@@ -76,7 +75,7 @@ func LoadKeyStore(cfgKeyStore *config.ConfigKeyStore, accountAddr *common.Addres
 	// })
 	// Assert("Cannot find keystore account", err)
 
-	if err := ks.Unlock(acc, string(passwd)); err != nil {
+	if err := ks.Unlock(acc, string(cfgKeyStore.Password)); err != nil {
 		return nil, nil, fmt.Errorf("Cannot unlock account: %w", err)
 	}
 	log.WithField("acc", acc.Address.Hex()).Info("Keystore and account unlocked successfully")
