@@ -49,32 +49,32 @@ ServiceApi = "0.0.0.0:6000"
 
 func TestLoad(t *testing.T) {
 	var cfg0 struct {
-		Identity ConfigIdentity
-		Server   ConfigServer
+		Identity Identity
+		Server   Server
 		Web3     struct {
 			Url string
 		}
 		Contracts struct {
-			RootCommits ConfigContract
+			RootCommits Contract
 		}
 		Storage struct {
 			Path string
 		}
-		KeyStore ConfigKeyStore
+		KeyStore KeyStore
 	}
 	err := Load(cfgTomlGood, &cfg0)
 	require.Nil(t, err)
 
 	var cfg1 struct {
 		Id     core.ID
-		Server ConfigServer
+		Server Server
 	}
 	err = Load(cfgTomlBad1, &cfg1)
 	require.NotNil(t, err)
 
 	var cfg2 struct {
 		Id     core.ID
-		Server ConfigServer
+		Server Server
 	}
 	err = Load(cfgTomlBad2, &cfg2)
 	require.NotNil(t, err)

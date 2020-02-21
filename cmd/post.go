@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func PostAdminApi(cfgServer *config.ConfigServer, path string, result interface{}) error {
+func PostAdminApi(cfgServer *config.Server, path string, result interface{}) error {
 	httpClient := httpclient.NewHttpClient(fmt.Sprintf("http://%s/api/unstable", cfgServer.AdminApi))
 	log.WithFields(log.Fields{
 		"path": path,

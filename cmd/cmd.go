@@ -288,7 +288,7 @@ func NewIssuer(storagePath, keyStoreBabyPath, keyStoreBabyPassword string) error
 	}
 
 	var config struct {
-		Identity config.ConfigIdentity
+		Identity config.Identity
 	}
 	config.Identity.Id = *id
 	kOp, err := kOpComp.Decompress()
@@ -311,9 +311,9 @@ func NewIssuer(storagePath, keyStoreBabyPath, keyStoreBabyPassword string) error
 
 func CmdNewIssuer(c *cli.Context) error {
 	var cfg struct {
-		KeyStore     config.ConfigKeyStore  `validate:"required"`
-		KeyStoreBaby config.ConfigKeyStore  `validate:"required"`
-		Contracts    config.ConfigContracts `validate:"required"`
+		KeyStore     config.KeyStore  `validate:"required"`
+		KeyStoreBaby config.KeyStore  `validate:"required"`
+		Contracts    config.Contracts `validate:"required"`
 		Storage      struct {
 			Path string
 		} `validate:"required"`
@@ -385,7 +385,7 @@ func CmdImportEthAccount(c *cli.Context) error {
 	}
 
 	var cfg struct {
-		KeyStore config.ConfigKeyStore `validate:"required"`
+		KeyStore config.KeyStore `validate:"required"`
 	}
 	if err := config.LoadFromCliFlag(c, &cfg); err != nil {
 		return err
@@ -413,7 +413,7 @@ func CmdImportEthAccount(c *cli.Context) error {
 
 func CmdNewEthAccount(c *cli.Context) error {
 	var cfg struct {
-		KeyStore config.ConfigKeyStore `validate:"required"`
+		KeyStore config.KeyStore `validate:"required"`
 	}
 	if err := config.LoadFromCliFlag(c, &cfg); err != nil {
 		return err

@@ -34,7 +34,7 @@ const (
 	filePrefix   = "file:"
 )
 
-func LoadKeyStore(cfgKeyStore *config.ConfigKeyStore, accountAddr *common.Address) (*ethkeystore.KeyStore, *accounts.Account, error) {
+func LoadKeyStore(cfgKeyStore *config.KeyStore, accountAddr *common.Address) (*ethkeystore.KeyStore, *accounts.Account, error) {
 	var err error
 	// var passwd string
 
@@ -84,7 +84,7 @@ func LoadKeyStore(cfgKeyStore *config.ConfigKeyStore, accountAddr *common.Addres
 	return ks, &acc, nil
 }
 
-func LoadKeyStoreBabyJub(cfgKeyStore *config.ConfigKeyStore, kOp *babyjub.PublicKey) (*babykeystore.KeyStore, error) {
+func LoadKeyStoreBabyJub(cfgKeyStore *config.KeyStore, kOp *babyjub.PublicKey) (*babykeystore.KeyStore, error) {
 	storage := babykeystore.NewFileStorage(cfgKeyStore.Path)
 	ks, err := babykeystore.NewKeyStore(storage, babykeystore.StandardKeyStoreParams)
 	if err != nil {
@@ -210,7 +210,7 @@ func LoadIssuer(id *core.ID, storage db.Storage, keyStore *babykeystore.KeyStore
 // merkle tree with the genesis claims if it's empty or check that the claims
 // exist in the merkle tree otherwise.  It returns the ProofClaims of the
 // genesis claims.
-// func LoadGenesis(mt *merkletree.MerkleTree, id *core.ID, kOp *babyjub.PublicKey, cfgEthKeys *config.ConfigEthKeys) *genesis.GenesisProofClaims {
+// func LoadGenesis(mt *merkletree.MerkleTree, id *core.ID, kOp *babyjub.PublicKey, cfgEthKeys *config.EthKeys) *genesis.GenesisProofClaims {
 // 	kDis := cfgEthKeys.KDis
 // 	kReen := cfgEthKeys.KReen
 // 	kUpdateRoot := cfgEthKeys.KUpdateRoot
