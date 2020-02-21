@@ -283,7 +283,7 @@ func (s *Server) Start() error {
 				log.Info("Issuer server finalized")
 				s.stoppedchPublish <- nil
 				return
-			case <-time.After(s.Cfg.Issuer.PublishStatePeriod):
+			case <-time.After(s.Cfg.Issuer.PublishStatePeriod.Duration):
 				if err := s.Issuer.PublishState(); err != nil {
 					log.Error(fmt.Errorf("Error on Issuer.PublishState: %w", err))
 				}
@@ -298,7 +298,7 @@ func (s *Server) Start() error {
 				log.Info("Issuer server finalized")
 				s.stoppedchSync <- nil
 				return
-			case <-time.After(s.Cfg.Issuer.SyncIdenStatePublicPeriod):
+			case <-time.After(s.Cfg.Issuer.SyncIdenStatePublicPeriod.Duration):
 				if err := s.Issuer.SyncIdenStatePublic(); err != nil {
 					log.Error(fmt.Errorf(
 						"Error on Issuer.SyncIdenStatePublicPeriod: %w", err))

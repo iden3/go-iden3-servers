@@ -15,6 +15,19 @@ import (
 	"github.com/urfave/cli"
 )
 
+type Duration struct {
+	time.Duration
+}
+
+func (d *Duration) UnmarshalText(data []byte) error {
+	duration, err := time.ParseDuration(string(data))
+	if err != nil {
+		return err
+	}
+	d.Duration = duration
+	return nil
+}
+
 type ConfigContract struct {
 	JsonABI string         `validate:"required"`
 	Address common.Address `validate:"required"`
@@ -81,8 +94,8 @@ type Config struct {
 		Path string
 	} `validate:"required"`
 	Issuer struct {
-		PublishStatePeriod        time.Duration `validate:"required"`
-		SyncIdenStatePublicPeriod time.Duration `validate:"required"`
+		PublishStatePeriod        Duration `validate:"required"`
+		SyncIdenStatePublicPeriod Duration `validate:"required"`
 	}
 	IdenPubOffChain ConfigIdenPubOffChain `validate:"required"`
 	// Names struct {
