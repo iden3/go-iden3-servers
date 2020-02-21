@@ -321,7 +321,7 @@ func CmdNewIssuer(c *cli.Context) error {
 	if err := config.LoadFromCliFlag(c, &cfg); err != nil {
 		return err
 	}
-	return NewIssuer(cfg.Storage.Path, cfg.KeyStoreBaby.Path, cfg.KeyStoreBaby.Password)
+	return NewIssuer(cfg.Storage.Path, cfg.KeyStoreBaby.Path, cfg.KeyStoreBaby.Password.Value)
 }
 
 func CmdStop(c *cli.Context, cfg *config.Config) error {
@@ -393,7 +393,7 @@ func CmdImportEthAccount(c *cli.Context) error {
 
 	ks := keystore.NewKeyStore(cfg.KeyStore.Path, keystore.StandardScryptN, keystore.StandardScryptP)
 
-	account, err := ks.ImportECDSA(key, cfg.KeyStore.Password)
+	account, err := ks.ImportECDSA(key, cfg.KeyStore.Password.Value)
 	if err != nil {
 		return err
 	}
@@ -420,7 +420,7 @@ func CmdNewEthAccount(c *cli.Context) error {
 	}
 
 	ks := keystore.NewKeyStore(cfg.KeyStore.Path, keystore.StandardScryptN, keystore.StandardScryptP)
-	account, err := ks.NewAccount(cfg.KeyStore.Password)
+	account, err := ks.NewAccount(cfg.KeyStore.Password.Value)
 	if err != nil {
 		return err
 	}
