@@ -28,65 +28,65 @@ func (d *Duration) UnmarshalText(data []byte) error {
 	return nil
 }
 
-type ConfigContract struct {
+type Contract struct {
 	JsonABI string         `validate:"required"`
 	Address common.Address `validate:"required"`
 }
 
-type ConfigServer struct {
+type Server struct {
 	ServiceApi string `validate:"required"`
 	AdminApi   string `validate:"required"`
 }
 
-type ConfigKeyStore struct {
+type KeyStore struct {
 	Path     string `validate:"required"`
 	Password string `validate:"required"`
 }
 
-type ConfigEthKeys struct {
+type EthKeys struct {
 	KDis        common.Address `validate:"required"`
 	KReen       common.Address `validate:"required"`
 	KUpdateRoot common.Address `validate:"required"`
 }
 
-type ConfigContracts struct {
-	IdenStates ConfigContract `validate:"required"`
-	// Iden3Impl     ConfigContract `validate:"required"`
-	// Iden3Deployer ConfigContract `validate:"required"`
-	// Iden3Proxy    ConfigContract `validate:"required"`
+type Contracts struct {
+	IdenStates Contract `validate:"required"`
+	// Iden3Impl     Contract `validate:"required"`
+	// Iden3Deployer Contract `validate:"required"`
+	// Iden3Proxy    Contract `validate:"required"`
 }
 
-type ConfigKeysBabyJub struct {
+type KeysBabyJub struct {
 	KOp babyjub.PublicKey `validate:"required"`
 }
 
-type ConfigIdentity struct {
+type Identity struct {
 	Id   core.ID `validate:"required"`
 	Keys struct {
-		// Ethereum ConfigEthKeys `validate:"required"`
-		BabyJub ConfigKeysBabyJub `validate:"required"`
+		// Ethereum EthKeys `validate:"required"`
+		BabyJub KeysBabyJub `validate:"required"`
 	} `validate:"required"`
 }
 
-type ConfigWeb3 struct {
+type Web3 struct {
 	Url string `validate:"required"`
 }
 
-type ConfigIdenPubOffChain struct {
+type IdenPubOffChain struct {
 	Http struct {
 		Url string `validate:"required"`
 	} `validate:"required"`
 }
 
 type Config struct {
-	Identity ConfigIdentity `validate:"required"`
+	Identity Identity `validate:"required"`
 	// Domain    string       `validate:"required"`
 	// Namespace string       `validate:"required"`
-	Server       ConfigServer    `validate:"required"`
-	Web3         ConfigWeb3      `validate:"required"`
-	KeyStore     ConfigKeyStore  `validate:"required"`
-	KeyStoreBaby ConfigKeyStore  `validate:"required"`
-	Contracts    ConfigContracts `validate:"required"`
+	Server       Server    `validate:"required"`
+	Web3         Web3      `validate:"required"`
+	KeyStore     KeyStore  `validate:"required"`
+	KeyStoreBaby KeyStore  `validate:"required"`
+	Contracts    Contracts `validate:"required"`
 	Account      struct {
 		Address common.Address `validate:"required"`
 	} `validate:"required"`
@@ -97,7 +97,7 @@ type Config struct {
 		PublishStatePeriod        Duration `validate:"required"`
 		SyncIdenStatePublicPeriod Duration `validate:"required"`
 	}
-	IdenPubOffChain ConfigIdenPubOffChain `validate:"required"`
+	IdenPubOffChain IdenPubOffChain `validate:"required"`
 	// Names struct {
 	// 	Path string `validate:"required"`
 	// } `validate:"required"`
