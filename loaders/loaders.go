@@ -2,7 +2,6 @@ package loaders
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/iden3/go-iden3-core/components/idenpuboffchain"
+	idenpuboffchainwriterhttp "github.com/iden3/go-iden3-core/components/idenpuboffchain/writerhttp"
 	"github.com/iden3/go-iden3-core/components/idenpubonchain"
 	"github.com/iden3/go-iden3-core/core"
 	"github.com/iden3/go-iden3-core/db"
@@ -36,7 +36,7 @@ const (
 
 func LoadKeyStore(cfgKeyStore *config.ConfigKeyStore, accountAddr *common.Address) (*ethkeystore.KeyStore, *accounts.Account, error) {
 	var err error
-	var passwd string
+	// var passwd string
 
 	// Load keystore
 	ks := ethkeystore.NewKeyStore(cfgKeyStore.Path, ethkeystore.StandardScryptN, ethkeystore.StandardScryptP)
@@ -46,19 +46,19 @@ func LoadKeyStore(cfgKeyStore *config.ConfigKeyStore, accountAddr *common.Addres
 	//   passwd: raw password
 	// if is not prefixed by any of those, file: is used
 	// TODO: Handle the literal password / file password with a configuration type
-	if strings.HasPrefix(cfgKeyStore.Password, passwdPrefix) {
-		passwd = cfgKeyStore.Password[len(passwdPrefix):]
-	} else {
-		filename := cfgKeyStore.Password
-		if strings.HasPrefix(filename, filePrefix) {
-			filename = cfgKeyStore.Password[len(filePrefix):]
-		}
-		passwdbytes, err := ioutil.ReadFile(filename)
-		if err != nil {
-			return nil, nil, fmt.Errorf("Cannot read password: %w", err)
-		}
-		passwd = string(passwdbytes)
-	}
+	//if strings.HasPrefix(cfgKeyStore.Password, passwdPrefix) {
+	//	passwd = cfgKeyStore.Password[len(passwdPrefix):]
+	//} else {
+	//	filename := cfgKeyStore.Password
+	//	if strings.HasPrefix(filename, filePrefix) {
+	//		filename = cfgKeyStore.Password[len(filePrefix):]
+	//	}
+	//	passwdbytes, err := ioutil.ReadFile(filename)
+	//	if err != nil {
+	//		return nil, nil, fmt.Errorf("Cannot read password: %w", err)
+	//	}
+	//	passwd = string(passwdbytes)
+	//}
 
 	acc, err := ks.Find(accounts.Account{
 		Address: *accountAddr,
@@ -76,7 +76,7 @@ func LoadKeyStore(cfgKeyStore *config.ConfigKeyStore, accountAddr *common.Addres
 	// })
 	// Assert("Cannot find keystore account", err)
 
-	if err := ks.Unlock(acc, string(passwd)); err != nil {
+	if err := ks.Unlock(acc, string(cfgKeyStore.Password)); err != nil {
 		return nil, nil, fmt.Errorf("Cannot unlock account: %w", err)
 	}
 	log.WithField("acc", acc.Address.Hex()).Info("Keystore and account unlocked successfully")
@@ -118,13 +118,6 @@ func LoadEthClient2(ks *ethkeystore.KeyStore, acc *accounts.Account, web3Url str
 		log.WithField("url", web3Url).Info("Connection to web3 server opened")
 	}
 	return eth.NewClient2(client, acc, ks), nil
-}
-
-func LoadIdenPubOnChain(client *eth.Client2, idenStatesAddress common.Address) idenpubonchain.IdenPubOnChainer {
-	addresses := idenpubonchain.ContractAddresses{
-		IdenStates: idenStatesAddress,
-	}
-	return idenpubonchain.New(client, addresses)
 }
 
 func LoadWeb3(ks *ethkeystore.KeyStore, acc *accounts.Account, web3Url string) (*eth.Web3Client, error) {
@@ -190,6 +183,13 @@ func LoadContract(client eth.Client, jsonabifile string, address *common.Address
 // func LoadIdenAdminUtils(mt *merkletree.MerkleTree, rootservice idenstatewriter.IdenStateWriter, claimservice *idenmanager.IdenManager) *idenadminutils.IdenAdminUtils {
 // 	return idenadminutils.New(mt, rootservice, claimservice)
 // }
+
+func LoadIdenPubOffChainWriter(storage db.Storage, id *core.ID, url string) (idenpuboffchain.IdenPubOffChainWriter, error) {
+	return idenpuboffchainwriterhttp.NewIdenPubOffChainWriteHttp(
+		idenpuboffchainwriterhttp.NewConfigDefault(url),
+		storage.WithPrefix([]byte(fmt.Sprintf("%v:writerhttp:", id))),
+	)
+}
 
 func LoadIssuer(id *core.ID, storage db.Storage, keyStore *babykeystore.KeyStore,
 	idenPubOnChain idenpubonchain.IdenPubOnChainer,
@@ -335,17 +335,22 @@ func LoadServer(cfg *config.Config) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	idenPubOnChain := LoadIdenPubOnChain(client2, cfg.Contracts.IdenStates.Address)
+
+	idenPubOnChain := idenpubonchain.New(client2, idenpubonchain.ContractAddresses{
+		IdenStates: cfg.Contracts.IdenStates.Address,
+	})
 	storage, err := LoadStorage(cfg.Storage.Path)
 	if err != nil {
 		return nil, err
 	}
-	// mt, err := LoadMerkele(storage)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
-	is, err := LoadIssuer(&cfg.Identity.Id, storage, ksBaby, idenPubOnChain, nil)
+	idenPubOffChainWrite, err := LoadIdenPubOffChainWriter(storage, &cfg.Identity.Id,
+		cfg.IdenPubOffChain.Http.Url)
+	if err != nil {
+		return nil, err
+	}
+
+	is, err := LoadIssuer(&cfg.Identity.Id, storage, ksBaby, idenPubOnChain, idenPubOffChainWrite)
 	if err != nil {
 		return nil, err
 	}
