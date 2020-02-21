@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/iden3/go-iden3-core/components/idenpuboffchain"
+	idenpuboffchainwriterhttp "github.com/iden3/go-iden3-core/components/idenpuboffchain/writerhttp"
 	"github.com/iden3/go-iden3-core/components/idenpubonchain"
 	"github.com/iden3/go-iden3-core/core"
 	"github.com/iden3/go-iden3-core/db"
@@ -119,13 +120,6 @@ func LoadEthClient2(ks *ethkeystore.KeyStore, acc *accounts.Account, web3Url str
 	return eth.NewClient2(client, acc, ks), nil
 }
 
-func LoadIdenPubOnChain(client *eth.Client2, idenStatesAddress common.Address) idenpubonchain.IdenPubOnChainer {
-	addresses := idenpubonchain.ContractAddresses{
-		IdenStates: idenStatesAddress,
-	}
-	return idenpubonchain.New(client, addresses)
-}
-
 func LoadWeb3(ks *ethkeystore.KeyStore, acc *accounts.Account, web3Url string) (*eth.Web3Client, error) {
 	// Create geth client
 	hidden := strings.HasPrefix(web3Url, "hidden:")
@@ -189,6 +183,13 @@ func LoadContract(client eth.Client, jsonabifile string, address *common.Address
 // func LoadIdenAdminUtils(mt *merkletree.MerkleTree, rootservice idenstatewriter.IdenStateWriter, claimservice *idenmanager.IdenManager) *idenadminutils.IdenAdminUtils {
 // 	return idenadminutils.New(mt, rootservice, claimservice)
 // }
+
+func LoadIdenPubOffChainWriter(storage db.Storage, id *core.ID, url string) (idenpuboffchain.IdenPubOffChainWriter, error) {
+	return idenpuboffchainwriterhttp.NewIdenPubOffChainWriteHttp(
+		idenpuboffchainwriterhttp.NewConfigDefault(url),
+		storage.WithPrefix([]byte(fmt.Sprintf("%v:writerhttp:", id))),
+	)
+}
 
 func LoadIssuer(id *core.ID, storage db.Storage, keyStore *babykeystore.KeyStore,
 	idenPubOnChain idenpubonchain.IdenPubOnChainer,
@@ -334,17 +335,22 @@ func LoadServer(cfg *config.Config) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	idenPubOnChain := LoadIdenPubOnChain(client2, cfg.Contracts.IdenStates.Address)
+
+	idenPubOnChain := idenpubonchain.New(client2, idenpubonchain.ContractAddresses{
+		IdenStates: cfg.Contracts.IdenStates.Address,
+	})
 	storage, err := LoadStorage(cfg.Storage.Path)
 	if err != nil {
 		return nil, err
 	}
-	// mt, err := LoadMerkele(storage)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
-	is, err := LoadIssuer(&cfg.Identity.Id, storage, ksBaby, idenPubOnChain, nil)
+	idenPubOffChainWrite, err := LoadIdenPubOffChainWriter(storage, &cfg.Identity.Id,
+		cfg.IdenPubOffChain.Http.Url)
+	if err != nil {
+		return nil, err
+	}
+
+	is, err := LoadIssuer(&cfg.Identity.Id, storage, ksBaby, idenPubOnChain, idenPubOffChainWrite)
 	if err != nil {
 		return nil, err
 	}

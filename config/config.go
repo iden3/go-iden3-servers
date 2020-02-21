@@ -59,6 +59,12 @@ type ConfigWeb3 struct {
 	Url string `validate:"required"`
 }
 
+type ConfigIdenPubOffChain struct {
+	Http struct {
+		Url string `validate:"required"`
+	} `validate:"required"`
+}
+
 type Config struct {
 	Identity ConfigIdentity `validate:"required"`
 	// Domain    string       `validate:"required"`
@@ -75,9 +81,10 @@ type Config struct {
 		Path string
 	} `validate:"required"`
 	Issuer struct {
-		PublishStatePeriod        time.Duration
-		SyncIdenStatePublicPeriod time.Duration
+		PublishStatePeriod        time.Duration `validate:"required"`
+		SyncIdenStatePublicPeriod time.Duration `validate:"required"`
 	}
+	IdenPubOffChain ConfigIdenPubOffChain `validate:"required"`
 	// Names struct {
 	// 	Path string `validate:"required"`
 	// } `validate:"required"`
