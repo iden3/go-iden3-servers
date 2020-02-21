@@ -184,7 +184,8 @@ func LoadContract(client eth.Client, jsonabifile string, address *common.Address
 // 	return idenadminutils.New(mt, rootservice, claimservice)
 // }
 
-func LoadIdenPubOffChainWriter(storage db.Storage, id *core.ID, url string) (idenpuboffchain.IdenPubOffChainWriter, error) {
+func LoadIdenPubOffChainWriteHttp(storage db.Storage, id *core.ID,
+	url string) (*idenpuboffchainwriterhttp.IdenPubOffChainWriteHttp, error) {
 	return idenpuboffchainwriterhttp.NewIdenPubOffChainWriteHttp(
 		idenpuboffchainwriterhttp.NewConfigDefault(url),
 		storage.WithPrefix([]byte(fmt.Sprintf("%v:writerhttp:", id))),
@@ -255,20 +256,21 @@ func LoadIssuer(id *core.ID, storage db.Storage, keyStore *babykeystore.KeyStore
 // }
 
 type Server struct {
-	Cfg              *config.Config
-	stopchPublish    chan (interface{})
-	stoppedchPublish chan (interface{})
-	stopchSync       chan (interface{})
-	stoppedchSync    chan (interface{})
-	Id               core.ID
-	Mt               *merkletree.MerkleTree
-	Issuer           *issuer.Issuer
-	IdenPubOnChain   idenpubonchain.IdenPubOnChainer
-	KeyStore         *ethkeystore.KeyStore
-	KeyStoreBaby     *babykeystore.KeyStore
-	Web3             *eth.Web3Client
-	EthClient2       *eth.Client2
-	KOp              *babyjub.PublicKey
+	Cfg                      *config.Config
+	stopchPublish            chan (interface{})
+	stoppedchPublish         chan (interface{})
+	stopchSync               chan (interface{})
+	stoppedchSync            chan (interface{})
+	Id                       core.ID
+	Mt                       *merkletree.MerkleTree
+	Issuer                   *issuer.Issuer
+	IdenPubOnChain           idenpubonchain.IdenPubOnChainer
+	IdenPubOffChainWriteHttp *idenpuboffchainwriterhttp.IdenPubOffChainWriteHttp
+	KeyStore                 *ethkeystore.KeyStore
+	KeyStoreBaby             *babykeystore.KeyStore
+	Web3                     *eth.Web3Client
+	EthClient2               *eth.Client2
+	KOp                      *babyjub.PublicKey
 }
 
 func (s *Server) Start() error {
@@ -281,7 +283,7 @@ func (s *Server) Start() error {
 				log.Info("Issuer server finalized")
 				s.stoppedchPublish <- nil
 				return
-			case <-time.After(s.Cfg.Issuer.PublishStatePeriod):
+			case <-time.After(s.Cfg.Issuer.PublishStatePeriod.Duration):
 				if err := s.Issuer.PublishState(); err != nil {
 					log.Error(fmt.Errorf("Error on Issuer.PublishState: %w", err))
 				}
@@ -296,7 +298,7 @@ func (s *Server) Start() error {
 				log.Info("Issuer server finalized")
 				s.stoppedchSync <- nil
 				return
-			case <-time.After(s.Cfg.Issuer.SyncIdenStatePublicPeriod):
+			case <-time.After(s.Cfg.Issuer.SyncIdenStatePublicPeriod.Duration):
 				if err := s.Issuer.SyncIdenStatePublic(); err != nil {
 					log.Error(fmt.Errorf(
 						"Error on Issuer.SyncIdenStatePublicPeriod: %w", err))
@@ -344,13 +346,13 @@ func LoadServer(cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 
-	idenPubOffChainWrite, err := LoadIdenPubOffChainWriter(storage, &cfg.Identity.Id,
+	idenPubOffChainWriteHttp, err := LoadIdenPubOffChainWriteHttp(storage, &cfg.Identity.Id,
 		cfg.IdenPubOffChain.Http.Url)
 	if err != nil {
 		return nil, err
 	}
 
-	is, err := LoadIssuer(&cfg.Identity.Id, storage, ksBaby, idenPubOnChain, idenPubOffChainWrite)
+	is, err := LoadIssuer(&cfg.Identity.Id, storage, ksBaby, idenPubOnChain, idenPubOffChainWriteHttp)
 	if err != nil {
 		return nil, err
 	}
@@ -366,7 +368,8 @@ func LoadServer(cfg *config.Config) (*Server, error) {
 		stoppedchSync:    make(chan (interface{})),
 		Issuer:           is,
 		// Mt:             mt,
-		IdenPubOnChain: idenPubOnChain,
+		IdenPubOnChain:           idenPubOnChain,
+		IdenPubOffChainWriteHttp: idenPubOffChainWriteHttp,
 		// KeyStore:       ks,
 		KeyStore:     nil,
 		KeyStoreBaby: ksBaby,
