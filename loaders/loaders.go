@@ -29,36 +29,9 @@ var (
 	dbCounterfactualPrefix = []byte{1}
 )
 
-const (
-	passwdPrefix = "passwd:"
-	filePrefix   = "file:"
-)
-
 func LoadKeyStore(cfgKeyStore *config.KeyStore, accountAddr *common.Address) (*ethkeystore.KeyStore, *accounts.Account, error) {
-	var err error
-	// var passwd string
-
 	// Load keystore
 	ks := ethkeystore.NewKeyStore(cfgKeyStore.Path, ethkeystore.StandardScryptN, ethkeystore.StandardScryptP)
-
-	// Password can be prefixed by two options
-	//   file: <path to file containing the password>
-	//   passwd: raw password
-	// if is not prefixed by any of those, file: is used
-	// TODO: Handle the literal password / file password with a configuration type
-	//if strings.HasPrefix(cfgKeyStore.Password, passwdPrefix) {
-	//	passwd = cfgKeyStore.Password[len(passwdPrefix):]
-	//} else {
-	//	filename := cfgKeyStore.Password
-	//	if strings.HasPrefix(filename, filePrefix) {
-	//		filename = cfgKeyStore.Password[len(filePrefix):]
-	//	}
-	//	passwdbytes, err := ioutil.ReadFile(filename)
-	//	if err != nil {
-	//		return nil, nil, fmt.Errorf("Cannot read password: %w", err)
-	//	}
-	//	passwd = string(passwdbytes)
-	//}
 
 	acc, err := ks.Find(accounts.Account{
 		Address: *accountAddr,
@@ -76,7 +49,7 @@ func LoadKeyStore(cfgKeyStore *config.KeyStore, accountAddr *common.Address) (*e
 	// })
 	// Assert("Cannot find keystore account", err)
 
-	if err := ks.Unlock(acc, string(cfgKeyStore.Password)); err != nil {
+	if err := ks.Unlock(acc, string(cfgKeyStore.Password.Value)); err != nil {
 		return nil, nil, fmt.Errorf("Cannot unlock account: %w", err)
 	}
 	log.WithField("acc", acc.Address.Hex()).Info("Keystore and account unlocked successfully")
@@ -92,7 +65,7 @@ func LoadKeyStoreBabyJub(cfgKeyStore *config.KeyStore, kOp *babyjub.PublicKey) (
 	}
 	if kOp != nil {
 		kOpComp := kOp.Compress()
-		if err := ks.UnlockKey(&kOpComp, []byte(cfgKeyStore.Password)); err != nil {
+		if err := ks.UnlockKey(&kOpComp, []byte(cfgKeyStore.Password.Value)); err != nil {
 			return nil, fmt.Errorf("Error unlocking babyjub key from keystore: %w", err)
 		}
 		log.WithField("kOp", kOpComp.String()).Info("Babyjub Keystore and key unlocked successfully")

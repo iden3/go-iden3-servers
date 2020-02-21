@@ -5,6 +5,7 @@ import (
 	// common3 "github.com/iden3/go-iden3-core/common"
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -38,9 +39,50 @@ type Server struct {
 	AdminApi   string `validate:"required"`
 }
 
+type Password struct {
+	Value string  // private content
+	Path  *string // path of the file with the password
+}
+
+func (p *Password) String() string {
+	if p.Path == nil {
+		return fmt.Sprintf("%v***", prefixPassword)
+	}
+	return fmt.Sprintf("%v%v", prefixFile, *p.Path)
+}
+
+const (
+	prefixPassword = "password://"
+	prefixFile     = "file://"
+)
+
+// UnmarshalText unmarshals the Password using the following rules
+// Password can be prefixed by two options
+//   'file://': <path to file containing the password>
+//   'password//': raw password
+func (p *Password) UnmarshalText(data []byte) error {
+	var passwd string
+	input := string(data)
+	if strings.HasPrefix(input, prefixPassword) {
+		passwd = input[len(prefixPassword):]
+	} else if strings.HasPrefix(input, prefixFile) {
+		filename := input[len(prefixFile):]
+		p.Path = &filename
+		passwdbytes, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return fmt.Errorf("Cannot read password: %w", err)
+		}
+		passwd = string(passwdbytes)
+	} else {
+		return fmt.Errorf("Prefix is missing. Use 'password://' or 'file://'")
+	}
+	p.Value = passwd
+	return nil
+}
+
 type KeyStore struct {
-	Path     string `validate:"required"`
-	Password string `validate:"required"`
+	Path     string   `validate:"required"`
+	Password Password `validate:"required"`
 }
 
 type EthKeys struct {
