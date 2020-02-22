@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 
 	// "github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
@@ -10,6 +11,7 @@ import (
 func Fail(c *gin.Context, msg string, err error) {
 	if err != nil {
 		log.WithError(err).Error(msg)
+		msg = fmt.Sprintf("%v: %v", msg, err)
 	} else {
 		log.Error(msg)
 	}
