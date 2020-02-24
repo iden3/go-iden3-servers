@@ -260,6 +260,10 @@ func (s *Server) Start() error {
 				if err := s.Issuer.PublishState(); err != nil {
 					log.Error(fmt.Errorf("Error on Issuer.PublishState: %w", err))
 				}
+				state, _ := s.Issuer.State()
+				onchain := s.Issuer.IdenStateOnChain()
+				pending := s.Issuer.IdenStatePending()
+				log.WithField("state", state).WithField("onchain", onchain).WithField("pending", pending).Debug("Issuer.PublishState()")
 			}
 		}
 	}()
@@ -276,6 +280,10 @@ func (s *Server) Start() error {
 					log.Error(fmt.Errorf(
 						"Error on Issuer.SyncIdenStatePublicPeriod: %w", err))
 				}
+				state, _ := s.Issuer.State()
+				pending := s.Issuer.IdenStatePending()
+				onchain := s.Issuer.IdenStateOnChain()
+				log.WithField("state", state).WithField("onchain", onchain).WithField("pending", pending).Debug("Issuer.SyncIdenStatePublic()")
 			}
 		}
 	}()
