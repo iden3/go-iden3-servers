@@ -1,19 +1,17 @@
 package handlers
 
 import (
-	"net/http"
-	"strconv"
+	"fmt"
 
 	// "github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
-	common3 "github.com/iden3/go-iden3-core/common"
-	"github.com/iden3/go-iden3-servers/loaders"
 	log "github.com/sirupsen/logrus"
 )
 
 func Fail(c *gin.Context, msg string, err error) {
 	if err != nil {
 		log.WithError(err).Error(msg)
+		msg = fmt.Sprintf("%v: %v", msg, err)
 	} else {
 		log.Error(msg)
 	}
@@ -24,18 +22,18 @@ func Fail(c *gin.Context, msg string, err error) {
 }
 
 // Generic
-func HandleGetRoot(c *gin.Context, iden *loaders.Identity) {
-	// get the contract data
-	root, err := iden.StateWriter.GetRoot(iden.Manager.ID())
-	if err != nil {
-		Fail(c, "error contract.GetRoot(C.Keys.Ethereum.KUpdateRoot)", err)
-		return
-	}
-	c.JSON(200, gin.H{
-		"root":         iden.Manager.MT().RootKey().Hex(),
-		"contractRoot": common3.HexEncode(root.Root[:]),
-	})
-}
+// func HandleGetRoot(c *gin.Context, srv *loaders.Server) {
+// 	// get the contract data
+// 	root, err := srv.StateWriter.GetRoot(srv.Issuer.ID())
+// 	if err != nil {
+// 		Fail(c, "error contract.GetRoot(C.Keys.Ethereum.KUpdateRoot)", err)
+// 		return
+// 	}
+// 	c.JSON(200, gin.H{
+// 		"root":         srv.Manager.MT().RootKey().Hex(),
+// 		"contractRoot": common3.HexEncode(root.Root[:]),
+// 	})
+// }
 
 // TODO: Redo once IdenStateReader.Info() is implemented
 // Admin
@@ -47,26 +45,26 @@ func HandleGetRoot(c *gin.Context, iden *loaders.Identity) {
 // 	})
 // }
 
-func HandleRawDump(c *gin.Context, iden *loaders.Identity) {
-	iden.AdminUtils.RawDump(c)
-}
+// func HandleRawDump(c *gin.Context, srv *loaders.Server) {
+// 	srv.AdminUtils.RawDump(c)
+// }
 
-func HandleRawImport(c *gin.Context, iden *loaders.Identity) {
-	var data map[string]string
-	err := c.BindJSON(&data)
-	if err != nil {
-		Fail(c, "json parsing error", err)
-		return
-	}
+// func HandleRawImport(c *gin.Context, srv *loaders.Server) {
+// 	var data map[string]string
+// 	err := c.BindJSON(&data)
+// 	if err != nil {
+// 		Fail(c, "json parsing error", err)
+// 		return
+// 	}
+//
+// 	count, err := srv.AdminUtils.RawImport(data)
+// 	if err != nil {
+// 		c.String(http.StatusBadRequest, err.Error())
+// 	}
+// 	c.String(http.StatusOK, "imported "+strconv.Itoa(count)+" key,value entries")
+// }
 
-	count, err := iden.AdminUtils.RawImport(data)
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-	}
-	c.String(http.StatusOK, "imported "+strconv.Itoa(count)+" key,value entries")
-}
-
-func HandleClaimsDump(c *gin.Context, iden *loaders.Identity) {
-	r := iden.AdminUtils.ClaimsDump()
-	c.JSON(http.StatusOK, r)
-}
+// func HandleClaimsDump(c *gin.Context, srv *loaders.Server) {
+// 	r := srv.AdminUtils.ClaimsDump()
+// 	c.JSON(http.StatusOK, r)
+// }

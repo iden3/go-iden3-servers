@@ -7,29 +7,36 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/iden3/go-iden3-servers/handlers"
 	"github.com/iden3/go-iden3-servers/loaders"
 	log "github.com/sirupsen/logrus"
 )
 
-func WithIden(iden *loaders.Identity, handler func(c *gin.Context, iden *loaders.Identity)) func(c *gin.Context) {
+func WithServer(srv *loaders.Server, handler func(c *gin.Context, srv *loaders.Server)) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		handler(c, iden)
+		handler(c, srv)
 	}
 }
 
-func NewServiceAPI(prefix string, iden *loaders.Identity) (*gin.Engine, *gin.RouterGroup) {
+func handleNoRoute(c *gin.Context) {
+	c.JSON(404, gin.H{
+		"error": "404 page not found",
+	})
+}
+
+func NewServiceAPI(prefix string, srv *loaders.Server) (*gin.Engine, *gin.RouterGroup) {
 	api := gin.Default()
+	api.NoRoute(handleNoRoute)
 	api.Use(cors.Default())
 
 	serviceapi := api.Group(prefix)
-	serviceapi.GET("/root", WithIden(iden, handlers.HandleGetRoot))
+	// serviceapi.GET("/root", WithServer(srv, handlers.HandleGetRoot))
 
 	return api, serviceapi
 }
 
-func NewAdminAPI(prefix string, stopch chan interface{}, iden *loaders.Identity) (*gin.Engine, *gin.RouterGroup) {
+func NewAdminAPI(prefix string, stopch chan interface{}, srv *loaders.Server) (*gin.Engine, *gin.RouterGroup) {
 	api := gin.Default()
+	api.NoRoute(handleNoRoute)
 	api.Use(cors.Default())
 	adminapi := api.Group("/api/unstable")
 
@@ -41,9 +48,9 @@ func NewAdminAPI(prefix string, stopch chan interface{}, iden *loaders.Identity)
 
 	// TODO: Reenable once HandleInfo is available again
 	//adminapi.GET("/info", HandleInfo)
-	adminapi.GET("/rawdump", WithIden(iden, handlers.HandleRawDump))
-	adminapi.POST("/rawimport", WithIden(iden, handlers.HandleRawImport))
-	adminapi.GET("/claimsdump", WithIden(iden, handlers.HandleClaimsDump))
+	// adminapi.GET("/rawdump", WithServer(srv, handlers.HandleRawDump))
+	// adminapi.POST("/rawimport", WithServer(srv, handlers.HandleRawImport))
+	// adminapi.GET("/claimsdump", WithServer(srv, handlers.HandleClaimsDump))
 	return api, adminapi
 }
 

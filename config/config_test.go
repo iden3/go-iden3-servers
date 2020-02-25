@@ -8,6 +8,7 @@ import (
 )
 
 var cfgTomlGood = `
+[Identity]
 Id = "113kyY52PSBr9oUqosmYkCavjjrQFuiuAw47FpZeUf"
 
 [Server]
@@ -19,7 +20,7 @@ Url = "http://127.0.0.1:8545"
 
 [KeyStore]
 Path = "/var/config/keystore"
-Password = "/var/config/keystore.password"
+Password = "password://keystorepassword"
 
 [Contracts]
 
@@ -48,32 +49,32 @@ ServiceApi = "0.0.0.0:6000"
 
 func TestLoad(t *testing.T) {
 	var cfg0 struct {
-		Id     core.ID
-		Server ConfigServer
-		Web3   struct {
+		Identity Identity
+		Server   Server
+		Web3     struct {
 			Url string
 		}
 		Contracts struct {
-			RootCommits ConfigContract
+			RootCommits Contract
 		}
 		Storage struct {
 			Path string
 		}
-		KeyStore ConfigKeyStore
+		KeyStore KeyStore
 	}
 	err := Load(cfgTomlGood, &cfg0)
 	require.Nil(t, err)
 
 	var cfg1 struct {
 		Id     core.ID
-		Server ConfigServer
+		Server Server
 	}
 	err = Load(cfgTomlBad1, &cfg1)
 	require.NotNil(t, err)
 
 	var cfg2 struct {
 		Id     core.ID
-		Server ConfigServer
+		Server Server
 	}
 	err = Load(cfgTomlBad2, &cfg2)
 	require.NotNil(t, err)

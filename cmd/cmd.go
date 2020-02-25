@@ -3,21 +3,19 @@ package cmd
 import (
 	"bufio"
 	"bytes"
-	"encoding/csv"
-	"encoding/hex"
-	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/BurntSushi/toml"
+	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	common3 "github.com/iden3/go-iden3-core/common"
-	"github.com/iden3/go-iden3-core/core/claims"
-	"github.com/iden3/go-iden3-core/core/genesis"
 	"github.com/iden3/go-iden3-core/db"
+	"github.com/iden3/go-iden3-core/identity/issuer"
 	babykeystore "github.com/iden3/go-iden3-core/keystore"
 	"github.com/iden3/go-iden3-servers/config"
 	"github.com/iden3/go-iden3-servers/loaders"
@@ -37,125 +35,128 @@ func WithCfg(cmd func(c *cli.Context, cfg *config.Config) error) func(c *cli.Con
 }
 
 // Claim
-func CmdAddClaim(c *cli.Context, cfg *config.Config) error {
-	indexData := c.Args().Get(0)
-	outData := c.Args().Get(1)
+// func CmdAddClaim(c *cli.Context, cfg *config.Config) error {
+// 	indexData := c.Args().Get(0)
+// 	outData := c.Args().Get(1)
+//
+// 	iden, err := loaders.LoadIdentity(cfg)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	var indexSlot [400 / 8]byte
+// 	var dataSlot [496 / 8]byte
+// 	if len(indexData) != len(indexSlot) || len(outData) != len(dataSlot) {
+// 		return fmt.Errorf(
+// 			"Length of indexSlot and dataSlot must be %v and %v respectively",
+// 			len(indexSlot), len(dataSlot))
+// 	}
+// 	copy(indexSlot[:], indexData)
+// 	copy(dataSlot[:], outData)
+// 	claim := claims.NewClaimBasic(indexSlot, dataSlot)
+// 	fmt.Println("clam: " + common3.HexEncode(claim.Entry().Bytes()))
+//
+// 	err = iden.Manager.AddClaim(claim)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	fmt.Print("root updated: " + iden.Mt.RootKey().Hex())
+//
+// 	mp, err := iden.Mt.GenerateProof(claim.Entry().HIndex(), nil)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	fmt.Print("merkleproof: " + common3.HexEncode(mp.Bytes()))
+//
+// 	return nil
+// }
 
-	iden, err := loaders.LoadIdentity(cfg)
-	if err != nil {
-		return err
-	}
-
-	var indexSlot [400 / 8]byte
-	var dataSlot [496 / 8]byte
-	if len(indexData) != len(indexSlot) || len(outData) != len(dataSlot) {
-		return fmt.Errorf(
-			"Length of indexSlot and dataSlot must be %v and %v respectively",
-			len(indexSlot), len(dataSlot))
-	}
-	copy(indexSlot[:], indexData)
-	copy(dataSlot[:], outData)
-	claim := claims.NewClaimBasic(indexSlot, dataSlot)
-	fmt.Println("clam: " + common3.HexEncode(claim.Entry().Bytes()))
-
-	err = iden.Manager.AddClaim(claim)
-	if err != nil {
-		return err
-	}
-	fmt.Print("root updated: " + iden.Mt.RootKey().Hex())
-
-	mp, err := iden.Mt.GenerateProof(claim.Entry().HIndex(), nil)
-	if err != nil {
-		return err
-	}
-	fmt.Print("merkleproof: " + common3.HexEncode(mp.Bytes()))
-
-	return nil
-}
-
-func CmdAddClaimsFromFile(c *cli.Context, cfg *config.Config) error {
-	filepath := c.Args().Get(0)
-
-	iden, err := loaders.LoadIdentity(cfg)
-	if err != nil {
-		return err
-	}
-
-	fmt.Print("\n---\nimporting claims\n---\n\n")
-	// csv file will have the following structure: indexData, noindexData
-	csvFile, _ := os.Open(filepath)
-	reader := csv.NewReader(bufio.NewReader(csvFile))
-	for {
-		line, error := reader.Read()
-		if error == io.EOF {
-			break
-		} else if error != nil {
-			log.Fatal(error)
-		}
-
-		fmt.Println("importing claim with index: " + line[0] + ", outside index: " + line[1])
-
-		var indexSlot [400 / 8]byte
-		var dataSlot [496 / 8]byte
-		if len(line[0]) != len(indexSlot) || len(line[1]) != len(dataSlot) {
-			return fmt.Errorf(
-				"Length of indexSlot and dataSlot must be %v and %v respectively",
-				len(indexSlot), len(dataSlot))
-		}
-		copy(indexSlot[:], line[0])
-		copy(dataSlot[:], line[1])
-		claim := claims.NewClaimBasic(indexSlot, dataSlot)
-		fmt.Println("clam: " + common3.HexEncode(claim.Entry().Bytes()) + "\n")
-
-		// add claim to merkletree, without updating the root, that will be done on the end of the loop (csv file)
-		err = iden.Mt.AddClaim(claim)
-		if err != nil {
-			return err
-		}
-	}
-	fmt.Print("\n---\ngenerating proofs\n---\n\n")
-	// now, let's generate the proofs
-	csvFile, _ = os.Open(filepath)
-	reader = csv.NewReader(bufio.NewReader(csvFile))
-	for {
-		line, error := reader.Read()
-		if error == io.EOF {
-			break
-		} else if error != nil {
-			log.Fatal(error)
-		}
-
-		fmt.Println("generating merkleproof of claim with index: " + line[0] + ", outside index: " + line[1])
-
-		var indexSlot [400 / 8]byte
-		var dataSlot [496 / 8]byte
-		if len(line[0]) != len(indexSlot) || len(line[1]) != len(dataSlot) {
-			return fmt.Errorf(
-				"Length of indexSlot and dataSlot must be %v and %v respectively",
-				len(indexSlot), len(dataSlot))
-		}
-		copy(indexSlot[:], line[0])
-		copy(dataSlot[:], line[1])
-		claim := claims.NewClaimBasic(indexSlot, dataSlot)
-		fmt.Println("clam: " + common3.HexEncode(claim.Entry().Bytes()))
-
-		// the proofs better generate them once all claims are added
-		mp, err := iden.Mt.GenerateProof(claim.Entry().HIndex(), nil)
-		if err != nil {
-			return err
-		}
-		fmt.Println("merkleproof: " + common3.HexEncode(mp.Bytes()) + "\n")
-	}
-	// update the root in the smart contract
-	iden.StateWriter.SetRoot(*iden.Mt.RootKey())
-	fmt.Println("merkletree root: " + iden.Mt.RootKey().Hex())
-
-	return nil
-}
+// func CmdAddClaimsFromFile(c *cli.Context, cfg *config.Config) error {
+// 	filepath := c.Args().Get(0)
+//
+// 	iden, err := loaders.LoadIdentity(cfg)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	fmt.Print("\n---\nimporting claims\n---\n\n")
+// 	// csv file will have the following structure: indexData, noindexData
+// 	csvFile, _ := os.Open(filepath)
+// 	reader := csv.NewReader(bufio.NewReader(csvFile))
+// 	for {
+// 		line, error := reader.Read()
+// 		if error == io.EOF {
+// 			break
+// 		} else if error != nil {
+// 			log.Fatal(error)
+// 		}
+//
+// 		fmt.Println("importing claim with index: " + line[0] + ", outside index: " + line[1])
+//
+// 		var indexSlot [400 / 8]byte
+// 		var dataSlot [496 / 8]byte
+// 		if len(line[0]) != len(indexSlot) || len(line[1]) != len(dataSlot) {
+// 			return fmt.Errorf(
+// 				"Length of indexSlot and dataSlot must be %v and %v respectively",
+// 				len(indexSlot), len(dataSlot))
+// 		}
+// 		copy(indexSlot[:], line[0])
+// 		copy(dataSlot[:], line[1])
+// 		claim := claims.NewClaimBasic(indexSlot, dataSlot)
+// 		fmt.Println("clam: " + common3.HexEncode(claim.Entry().Bytes()) + "\n")
+//
+// 		// add claim to merkletree, without updating the root, that will be done on the end of the loop (csv file)
+// 		err = iden.Mt.AddClaim(claim)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	fmt.Print("\n---\ngenerating proofs\n---\n\n")
+// 	// now, let's generate the proofs
+// 	csvFile, _ = os.Open(filepath)
+// 	reader = csv.NewReader(bufio.NewReader(csvFile))
+// 	for {
+// 		line, error := reader.Read()
+// 		if error == io.EOF {
+// 			break
+// 		} else if error != nil {
+// 			log.Fatal(error)
+// 		}
+//
+// 		fmt.Println("generating merkleproof of claim with index: " + line[0] + ", outside index: " + line[1])
+//
+// 		var indexSlot [400 / 8]byte
+// 		var dataSlot [496 / 8]byte
+// 		if len(line[0]) != len(indexSlot) || len(line[1]) != len(dataSlot) {
+// 			return fmt.Errorf(
+// 				"Length of indexSlot and dataSlot must be %v and %v respectively",
+// 				len(indexSlot), len(dataSlot))
+// 		}
+// 		copy(indexSlot[:], line[0])
+// 		copy(dataSlot[:], line[1])
+// 		claim := claims.NewClaimBasic(indexSlot, dataSlot)
+// 		fmt.Println("clam: " + common3.HexEncode(claim.Entry().Bytes()))
+//
+// 		// the proofs better generate them once all claims are added
+// 		mp, err := iden.Mt.GenerateProof(claim.Entry().HIndex(), nil)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		fmt.Println("merkleproof: " + common3.HexEncode(mp.Bytes()) + "\n")
+// 	}
+// 	// update the root in the smart contract
+// 	iden.StateWriter.SetRoot(*iden.Mt.RootKey())
+// 	fmt.Println("merkletree root: " + iden.Mt.RootKey().Hex())
+//
+// 	return nil
+// }
 
 // DB
 func CmdDbRawDump(c *cli.Context, storagePath string) error {
-	storage := loaders.LoadStorage(storagePath)
+	storage, err := loaders.LoadStorage(storagePath)
+	if err != nil {
+		return err
+	}
 	ldb := (storage.(*db.LevelDbStorage)).LevelDB()
 	iter := ldb.NewIterator(nil, nil)
 	for iter.Next() {
@@ -177,7 +178,10 @@ func CmdDbRawImport(c *cli.Context, storagePath string) error {
 
 	count := 0
 
-	storage := loaders.LoadStorage(storagePath)
+	storage, err := loaders.LoadStorage(storagePath)
+	if err != nil {
+		return err
+	}
 	tx, err := storage.NewTx()
 	if err != nil {
 		return err
@@ -217,7 +221,10 @@ func CmdDbRawImport(c *cli.Context, storagePath string) error {
 }
 
 func CmdDbIPFSexport(c *cli.Context, storagePath string) error {
-	storage := loaders.LoadStorage(storagePath)
+	storage, err := loaders.LoadStorage(storagePath)
+	if err != nil {
+		return err
+	}
 	ldb := (storage.(*db.LevelDbStorage)).LevelDB()
 	iter := ldb.NewIterator(nil, nil)
 	for iter.Next() {
@@ -233,119 +240,217 @@ func CmdDbIPFSexport(c *cli.Context, storagePath string) error {
 	return nil
 }
 
-func NewIdentity(keyStorePath, keyStorePassword, keyStoreBabyPath, keyStoreBabyPassword string) error {
-	if keyStorePath == "" {
-		return errors.New("No Ethereum Keystore path specified")
-	}
-	if keyStorePassword == "" {
-		return errors.New("No Ethereum Keystore password specified")
-	}
-	if keyStoreBabyPath == "" {
-		return errors.New("No BabyJub Keystore path specified")
-	}
-	if keyStoreBabyPassword == "" {
-		return errors.New("No BabyJub Keystore password specified")
-	}
-
-	// open babyjub keystore
+func NewIssuer(storagePath, keyStoreBabyPath, keyStoreBabyPassword string) error {
+	// Open babyjub keystore
 	params := babykeystore.StandardKeyStoreParams
-	storageBJ := babykeystore.NewFileStorage(keyStoreBabyPath)
-	ksBJ, err := babykeystore.NewKeyStore(storageBJ, params)
+	keyStoreStorage := babykeystore.NewFileStorage(keyStoreBabyPath)
+	keyStore, err := babykeystore.NewKeyStore(keyStoreStorage, params)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	defer ksBJ.Close()
-	// create babyjub keys
-	kopPubComp, err := ksBJ.NewKey([]byte(keyStoreBabyPassword))
-	if err != nil {
-		panic(err)
-	}
-	kopPub, err := kopPubComp.Decompress()
+	defer keyStore.Close()
 
-	// open ethereum keystore
-	ks := keystore.NewKeyStore(keyStorePath, keystore.StandardScryptN, keystore.StandardScryptP)
-	passbytes, err := ioutil.ReadFile(keyStorePassword)
+	// Create babyjub keys
+	kOpComp, err := keyStore.NewKey([]byte(keyStoreBabyPassword))
+	if err = keyStore.UnlockKey(kOpComp, []byte(keyStoreBabyPassword)); err != nil {
+		return err
+	}
 
-	// kDis key
-	accKDis, err := ks.NewAccount(string(passbytes))
+	// Create the Issuer in a memory db and later transfer it to the storage under the identity prefix
+	memStorage := db.NewMemoryStorage()
+	cfg := issuer.ConfigDefault
+	is, err := issuer.New(cfg, kOpComp, nil, memStorage, keyStore, nil, nil)
 	if err != nil {
 		return err
 	}
-	kDis := accKDis.Address
-	// kReen
-	accKReen, err := ks.NewAccount(string(passbytes))
+	id := is.ID()
+	storage, err := loaders.LoadStorage(storagePath)
 	if err != nil {
 		return err
 	}
-	kReen := accKReen.Address
-	// kUpdateRoot
-	accKUpdateRoot, err := ks.NewAccount(string(passbytes))
+	idenStorage := storage.WithPrefix([]byte(fmt.Sprintf("%v:", id)))
+	tx, err := idenStorage.NewTx()
 	if err != nil {
 		return err
 	}
-	kUpdateRoot := accKUpdateRoot.Address
+	memStorage.Iterate(func(k []byte, v []byte) (bool, error) {
+		tx.Put(k, v)
+		return true, nil
+	})
+	if err := tx.Commit(); err != nil {
+		return err
+	}
 
-	// create genesis identity
-	id, _, err := genesis.CalculateIdGenesisFrom4Keys(kopPub, kDis, kReen, kUpdateRoot)
+	// Verify that the issuer can be loaded successfully
+	_, err = loaders.LoadIssuer(id, storage, keyStore, nil, nil)
 	if err != nil {
 		return err
 	}
-	s := `
-keys:
-  ethereum:
-    kdis: ` + kDis.Hex() + `
-    kreen: ` + kReen.Hex() + `
-    kupdateroot: ` + kUpdateRoot.Hex() + `
-  babyjub:
-    kop: ` + hex.EncodeToString(kopPubComp[:]) + `
-id: ` + id.String()
-	fmt.Fprintf(os.Stderr, "keys and identity created successfully. Copy & paste this lines into the config file:\n")
-	fmt.Println(s)
+
+	var config struct {
+		Identity config.Identity
+	}
+	config.Identity.Id = *id
+	kOp, err := kOpComp.Decompress()
+	if err != nil {
+		return err
+	}
+	config.Identity.Keys.BabyJub.KOp = *kOp
+
+	var configTOML bytes.Buffer
+	if err := toml.NewEncoder(&configTOML).Encode(&config); err != nil {
+		return nil
+	}
+
+	fmt.Fprintf(os.Stderr, "Keys and identity created successfully."+
+		" Copy & paste the lines between '---' into the config file:\n---\n")
+	fmt.Print(configTOML.String())
+	fmt.Fprintf(os.Stderr, "---\n")
 	return nil
 }
 
-func CmdNewIdentity(c *cli.Context, cfg *config.Config) error {
-	return NewIdentity(cfg.KeyStore.Path, cfg.KeyStore.Password, cfg.KeyStoreBaby.Path, cfg.KeyStoreBaby.Password)
+func CmdNewIssuer(c *cli.Context) error {
+	var cfg struct {
+		KeyStore     config.KeyStore  `validate:"required"`
+		KeyStoreBaby config.KeyStore  `validate:"required"`
+		Contracts    config.Contracts `validate:"required"`
+		Storage      struct {
+			Path string
+		} `validate:"required"`
+	}
+	if err := config.LoadFromCliFlag(c, &cfg); err != nil {
+		return err
+	}
+	return NewIssuer(cfg.Storage.Path, cfg.KeyStoreBaby.Path, cfg.KeyStoreBaby.Password.Value)
 }
 
 func CmdStop(c *cli.Context, cfg *config.Config) error {
-	output, err := PostAdminApi(cfg.Server.AdminApi, "stop")
-	if err == nil {
-		log.Info("Server response: ", output)
+	if err := PostAdminApi(&cfg.Server, "stop", nil); err != nil {
+		return err
 	}
-	return err
+	return nil
 }
 
-func CmdInfo(c *cli.Context, cfg *config.Config) error {
-	output, err := PostAdminApi(cfg.Server.AdminApi, "info")
-	if err == nil {
-		log.Info("Server response: ", output)
+// func CmdInfo(c *cli.Context, cfg *config.Config) error {
+// 	output, err := PostAdminApi(cfg.Server.AdminApi, "info")
+// 	if err == nil {
+// 		log.Info("Server response: ", output)
+// 	}
+// 	return err
+// }
+
+func CmdSync(c *cli.Context, cfg *config.Config) error {
+	if err := PostAdminApi(&cfg.Server, "issuer/syncidenstatepublic", nil); err != nil {
+		return err
 	}
-	return err
+	return nil
 }
 
-func CmdStart(c *cli.Context, cfg *config.Config, endpointServe func(cfg *config.Config, iden *loaders.Identity)) error {
-	iden, err := loaders.LoadIdentity(cfg)
+func CmdStart(c *cli.Context, cfg *config.Config, endpointServe func(cfg *config.Config, srv *loaders.Server)) error {
+	srv, err := loaders.LoadServer(cfg)
 	if err != nil {
 		return err
 	}
 
 	// Check for funds
-	balance, err := iden.Web3.BalanceAt(iden.Web3.Account().Address)
+	balance, err := srv.Web3.BalanceAt(srv.Web3.Account().Address)
 	if err != nil {
-		log.Panic(err)
+		return err
 	}
 	log.WithFields(log.Fields{
 		"balance": balance.String(),
-		"address": iden.Web3.Account().Address.Hex(),
+		"address": srv.Web3.Account().Address.Hex(),
 	}).Info("Account balance retrieved")
 	if balance.Int64() < 3000000 {
-		log.Panic("Not enough funds in the relay address")
+		return fmt.Errorf("Not enough funds in the ethereum address")
 	}
 
-	endpointServe(cfg, iden)
+	srv.Start()
 
-	iden.StateWriter.StopAndJoin()
+	endpointServe(cfg, srv)
+
+	srv.StopAndJoin()
 
 	return nil
+}
+
+func CmdImportEthAccount(c *cli.Context) error {
+	keyfile := c.Args().First()
+	if len(keyfile) == 0 {
+		return fmt.Errorf("keyfile must be given as argument")
+	}
+	key, err := crypto.LoadECDSA(keyfile)
+	if err != nil {
+		return err
+	}
+
+	var cfg struct {
+		KeyStore config.KeyStore `validate:"required"`
+	}
+	if err := config.LoadFromCliFlag(c, &cfg); err != nil {
+		return err
+	}
+
+	ks := keystore.NewKeyStore(cfg.KeyStore.Path, keystore.StandardScryptN, keystore.StandardScryptP)
+
+	account, err := ks.ImportECDSA(key, cfg.KeyStore.Password.Value)
+	if err != nil {
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"keyfile": keyfile,
+		"path":    cfg.KeyStore.Path,
+		"address": account.Address.Hex(),
+	}).Info("Imported Eth Account from private key")
+
+	fmt.Fprintf(os.Stderr, "Ethereum Account imported successfully."+
+		" Copy & paste the lines between '---' into the config file:\n")
+	printAccountToml(account)
+
+	return nil
+}
+
+func CmdNewEthAccount(c *cli.Context) error {
+	var cfg struct {
+		KeyStore config.KeyStore `validate:"required"`
+	}
+	if err := config.LoadFromCliFlag(c, &cfg); err != nil {
+		return err
+	}
+
+	ks := keystore.NewKeyStore(cfg.KeyStore.Path, keystore.StandardScryptN, keystore.StandardScryptP)
+	account, err := ks.NewAccount(cfg.KeyStore.Password.Value)
+	if err != nil {
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"path":    cfg.KeyStore.Path,
+		"address": account.Address.Hex(),
+	}).Info("Created new Eth Account")
+
+	fmt.Fprintf(os.Stderr, "Ethereum Account created successfully."+
+		" Copy & paste the lines between '---' into the config file:\n")
+	printAccountToml(account)
+
+	return nil
+}
+
+func printAccountToml(account accounts.Account) {
+	var config struct {
+		Account struct {
+			Address common.Address
+		}
+	}
+	config.Account.Address = account.Address
+
+	var configTOML bytes.Buffer
+	if err := toml.NewEncoder(&configTOML).Encode(&config); err != nil {
+		log.Error(err)
+	}
+
+	fmt.Fprintf(os.Stderr, "\n---\n")
+	fmt.Print(configTOML.String())
+	fmt.Fprintf(os.Stderr, "---\n")
 }

@@ -5,14 +5,14 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/iden3/go-iden3-servers/servers/relay/commands"
+	"github.com/iden3/go-iden3-servers/servers/issuer/commands"
 	"github.com/urfave/cli"
 )
 
 func main() {
 
 	app := cli.NewApp()
-	app.Name = "relayeri3"
+	app.Name = "issuer-iden3"
 	app.Version = "0.1.0-alpha"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{Name: "config"},
@@ -20,8 +20,6 @@ func main() {
 
 	app.Commands = []cli.Command{}
 	app.Commands = append(app.Commands, commands.ServerCommands...)
-	app.Commands = append(app.Commands, commands.IdCommands...)
-	app.Commands = append(app.Commands, commands.ContractCommands...)
 	app.Commands = append(app.Commands, commands.DbCommands...)
 	app.Commands = append(app.Commands, commands.ClaimCommands...)
 

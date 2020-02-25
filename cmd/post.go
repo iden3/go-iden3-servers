@@ -1,30 +1,27 @@
 package cmd
 
 import (
-	"bytes"
-	"io/ioutil"
-	"net/http"
-	"strings"
+	"fmt"
+
+	"github.com/iden3/go-iden3-core/components/httpclient"
+	"github.com/iden3/go-iden3-servers/config"
+	log "github.com/sirupsen/logrus"
 )
 
-func PostAdminApi(addr string, command string) (string, error) {
-	hostport := strings.Split(addr, ":")
-	if hostport[0] == "0.0.0.0" {
-		hostport[0] = "127.0.0.1"
+func PostAdminApi(cfgServer *config.Server, path string, result interface{}) error {
+	httpClient := httpclient.NewHttpClient(fmt.Sprintf("http://%s/api/unstable", cfgServer.AdminApi))
+	log.WithFields(log.Fields{
+		"path": path,
+	}).Info("Posting admin api")
+	if result == nil {
+		m := make(map[string]interface{})
+		result = &m
 	}
-	url := "http://" + hostport[0] + ":" + hostport[1] + "/" + command
-
-	var body bytes.Buffer
-	resp, err := http.Post(url, "text/plain", &body)
-	if err != nil {
-		return "", err
+	if err := httpClient.DoRequest(httpClient.NewRequest().Path(path).Post(""), result); err != nil {
+		return fmt.Errorf("Failed http request: %w", err)
 	}
-
-	defer resp.Body.Close()
-	output, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	return string(output), nil
+	log.WithFields(log.Fields{
+		"result": result,
+	}).Info("Post admin api")
+	return nil
 }
