@@ -257,13 +257,15 @@ func (s *Server) Start() error {
 				s.stoppedchPublish <- nil
 				return
 			case <-time.After(s.Cfg.Issuer.PublishStatePeriod.Duration):
+				log.Debug("Issuer.PublishState()...")
 				if err := s.Issuer.PublishState(); err != nil {
 					log.Error(fmt.Errorf("Error on Issuer.PublishState: %w", err))
 				}
 				state, _ := s.Issuer.State()
 				onchain := s.Issuer.IdenStateOnChain()
 				pending := s.Issuer.IdenStatePending()
-				log.WithField("state", state).WithField("onchain", onchain).WithField("pending", pending).Debug("Issuer.PublishState()")
+				log.WithField("state", state).WithField("onchain", onchain).
+					WithField("pending", pending).Debug("Issuer.PublishState()")
 			}
 		}
 	}()
@@ -276,6 +278,7 @@ func (s *Server) Start() error {
 				s.stoppedchSync <- nil
 				return
 			case <-time.After(s.Cfg.Issuer.SyncIdenStatePublicPeriod.Duration):
+				log.Debug("Issuer.SyncIdenStatePublic()...")
 				if err := s.Issuer.SyncIdenStatePublic(); err != nil {
 					log.Error(fmt.Errorf(
 						"Error on Issuer.SyncIdenStatePublicPeriod: %w", err))
@@ -283,7 +286,8 @@ func (s *Server) Start() error {
 				state, _ := s.Issuer.State()
 				pending := s.Issuer.IdenStatePending()
 				onchain := s.Issuer.IdenStateOnChain()
-				log.WithField("state", state).WithField("onchain", onchain).WithField("pending", pending).Debug("Issuer.SyncIdenStatePublic()")
+				log.WithField("state", state).WithField("onchain", onchain).
+					WithField("pending", pending).Debug("Issuer.SyncIdenStatePublic()")
 			}
 		}
 	}()
