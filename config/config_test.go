@@ -20,7 +20,7 @@ Url = "http://127.0.0.1:8545"
 
 [KeyStore]
 Path = "/var/config/keystore"
-Password = "/var/config/keystore.password"
+Password = "password://keystorepassword"
 
 [Contracts]
 
