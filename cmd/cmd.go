@@ -259,11 +259,10 @@ func NewIssuer(storagePath, keyStoreBabyPath, keyStoreBabyPassword string) error
 	// Create the Issuer in a memory db and later transfer it to the storage under the identity prefix
 	memStorage := db.NewMemoryStorage()
 	cfg := issuer.ConfigDefault
-	is, err := issuer.New(cfg, kOpComp, nil, memStorage, keyStore, nil, nil)
+	id, err := issuer.Create(cfg, kOpComp, nil, memStorage, keyStore)
 	if err != nil {
 		return err
 	}
-	id := is.ID()
 	storage, err := loaders.LoadStorage(storagePath)
 	if err != nil {
 		return err
@@ -278,12 +277,6 @@ func NewIssuer(storagePath, keyStoreBabyPath, keyStoreBabyPassword string) error
 		return true, nil
 	})
 	if err := tx.Commit(); err != nil {
-		return err
-	}
-
-	// Verify that the issuer can be loaded successfully
-	_, err = loaders.LoadIssuer(id, storage, keyStore, nil, nil)
-	if err != nil {
 		return err
 	}
 
