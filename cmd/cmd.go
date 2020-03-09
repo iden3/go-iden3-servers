@@ -346,13 +346,13 @@ func CmdStart(c *cli.Context, cfg *config.Config, endpointServe func(cfg *config
 	}
 
 	// Check for funds
-	balance, err := srv.Web3.BalanceAt(srv.Web3.Account().Address)
+	balance, err := srv.EthClient.BalanceAt(srv.EthClient.Account().Address)
 	if err != nil {
 		return err
 	}
 	log.WithFields(log.Fields{
 		"balance": balance.String(),
-		"address": srv.Web3.Account().Address.Hex(),
+		"address": srv.EthClient.Account().Address.Hex(),
 	}).Info("Account balance retrieved")
 	if balance.Int64() < 3000000 {
 		return fmt.Errorf("Not enough funds in the ethereum address")

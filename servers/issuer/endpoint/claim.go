@@ -40,7 +40,7 @@ type claimData struct {
 // handlePostClaim handles the request to add a claim to a user tree.
 // func handlePostClaim(c *gin.Context, iden *loaders.Identity) {
 // 	var m claimData
-// 	if err := c.BindJSON(&m); err != nil {
+// 	if err := c.ShouldBindJSON(&m); err != nil {
 // 		handlers.Fail(c, "cannot parse json body", err)
 // 		return
 // 	}

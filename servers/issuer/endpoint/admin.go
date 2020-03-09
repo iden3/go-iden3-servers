@@ -27,7 +27,7 @@ func handleSyncIdenStatePublic(c *gin.Context, srv *loaders.Server) {
 // DEPRECATED
 // func handleAddClaimBasic(c *gin.Context) {
 // 	var m addClaimBasicMsg
-// 	err := c.BindJSON(&m)
+// 	err := c.ShouldBindJSON(&m)
 // 	if err != nil {
 // 		genericserver.Fail(c, "json parsing error", err)
 // 		return

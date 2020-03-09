@@ -2,7 +2,6 @@ package loaders
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -75,7 +74,7 @@ func LoadKeyStoreBabyJub(cfgKeyStore *config.KeyStore, kOp *babyjub.PublicKey) (
 	}
 }
 
-func LoadEthClient2(ks *ethkeystore.KeyStore, acc *accounts.Account, web3Url string) (*eth.Client2, error) {
+func LoadEthClient(ks *ethkeystore.KeyStore, acc *accounts.Account, web3Url string) (*eth.Client, error) {
 	// TODO: Handle the hidden: thing with a custon configuration type
 	hidden := strings.HasPrefix(web3Url, "hidden:")
 	if hidden {
@@ -90,25 +89,7 @@ func LoadEthClient2(ks *ethkeystore.KeyStore, acc *accounts.Account, web3Url str
 	} else {
 		log.WithField("url", web3Url).Info("Connection to web3 server opened")
 	}
-	return eth.NewClient2(client, acc, ks), nil
-}
-
-func LoadWeb3(ks *ethkeystore.KeyStore, acc *accounts.Account, web3Url string) (*eth.Web3Client, error) {
-	// Create geth client
-	hidden := strings.HasPrefix(web3Url, "hidden:")
-	if hidden {
-		web3Url = web3Url[len("hidden:"):]
-	}
-	web3cli, err := eth.NewWeb3Client(web3Url, ks, acc)
-	if err != nil {
-		return nil, fmt.Errorf("Error creating web3 client: %w", err)
-	}
-	if hidden {
-		log.WithField("url", "(hidden)").Info("Connection to web3 server opened")
-	} else {
-		log.WithField("url", web3Url).Info("Connection to web3 server opened")
-	}
-	return web3cli, nil
+	return eth.NewClient(client, acc, ks), nil
 }
 
 func LoadStorage(storagePath string) (db.Storage, error) {
@@ -120,42 +101,6 @@ func LoadStorage(storagePath string) (db.Storage, error) {
 	log.WithField("path", storagePath).Info("Storage opened")
 	return storage, nil
 }
-
-// func LoadMerkele(storage db.Storage) (*merkletree.MerkleTree, error) {
-// 	mtstorage := storage.WithPrefix(dbMerkletreePrefix)
-// 	mt, err := merkletree.NewMerkleTree(mtstorage, 140)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("Error opening merkle tree: %w", err)
-// 	}
-// 	log.WithField("hash", mt.RootKey().Hex()).Info("Current root")
-//
-// 	return mt, nil
-// }
-
-func LoadContract(client eth.Client, jsonabifile string, address *common.Address) (*eth.Contract, error) {
-	abiFile, err := os.Open(jsonabifile)
-	if err != nil {
-		return nil, fmt.Errorf("Error reading contract %s: %w", jsonabifile, err)
-	}
-
-	abi, code, err := eth.UnmarshallSolcAbiJson(abiFile)
-	if err != nil {
-		return nil, fmt.Errorf("Error parsing contract %s: %w", jsonabifile, err)
-	}
-	log.WithField("jsonabifile", jsonabifile).Info("Contract loaded successfully")
-
-	return eth.NewContract(client, abi, code, address), nil
-}
-
-// func LoadIdenManager(mt *merkletree.MerkleTree, rootservice idenstatewriter.IdenStateWriter, ks *babykeystore.KeyStore, pk *babyjub.PublicKey, id *core.ID) *idenmanager.IdenManager {
-// 	log.WithField("id", id.String()).Info("Running claim service")
-// 	signer := idensigner.New(ks, *pk)
-// 	return idenmanager.New(id, mt, rootservice, *signer)
-// }
-//
-// func LoadIdenAdminUtils(mt *merkletree.MerkleTree, rootservice idenstatewriter.IdenStateWriter, claimservice *idenmanager.IdenManager) *idenadminutils.IdenAdminUtils {
-// 	return idenadminutils.New(mt, rootservice, claimservice)
-// }
 
 func LoadIdenPubOffChainWriteHttp(storage db.Storage, id *core.ID,
 	url string) (*idenpuboffchainwriterhttp.IdenPubOffChainWriteHttp, error) {
@@ -178,56 +123,6 @@ func LoadIssuer(id *core.ID, storage db.Storage, keyStore *babykeystore.KeyStore
 	return is, nil
 }
 
-// LoadGenesis will calculate the genesis id from the keys in the configuration
-// file and check it against the id in the configuration.  It will populate the
-// merkle tree with the genesis claims if it's empty or check that the claims
-// exist in the merkle tree otherwise.  It returns the ProofClaims of the
-// genesis claims.
-// func LoadGenesis(mt *merkletree.MerkleTree, id *core.ID, kOp *babyjub.PublicKey, cfgEthKeys *config.EthKeys) *genesis.GenesisProofClaims {
-// 	kDis := cfgEthKeys.KDis
-// 	kReen := cfgEthKeys.KReen
-// 	kUpdateRoot := cfgEthKeys.KUpdateRoot
-// 	id0, proofClaims, err := genesis.CalculateIdGenesisFrom4Keys(kOp, kDis, kReen, kUpdateRoot)
-// 	Assert("CalculateIdGenesis failed", err)
-//
-// 	if *id0 != *id {
-// 		Assert("Error", fmt.Errorf("Calculated genesis id (%v) "+
-// 			"doesn't match configuration id (%v)", id0.String(), id0.String()))
-// 	}
-//
-// 	proofClaimsList := []proof.ProofClaim{proofClaims.KOp, proofClaims.KDis,
-// 		proofClaims.KReen, proofClaims.KUpdateRoot}
-// 	root := mt.RootKey()
-// 	if bytes.Equal(root[:], merkletree.HashZero[:]) {
-// 		// Merklee tree DB is empty
-// 		// Add genesis claims to merkle tree
-// 		log.WithField("root", root.Hex()).Info("Merkle tree is empty")
-// 		for _, proofClaim := range proofClaimsList {
-// 			if err := mt.AddEntry(proofClaim.Claim); err != nil {
-// 				Assert("Error adding claim to merkle tree", err)
-// 			}
-// 		}
-// 	} else {
-// 		// MerkleTree DB has already been initialized
-// 		// Check that the geneiss claims are in the merkle tree
-// 		log.WithField("root", root.Hex()).Info("Merkle tree already initialized")
-// 		for _, proofClaim := range proofClaimsList {
-// 			entry := proofClaim.Claim
-// 			data, err := mt.GetDataByIndex(entry.HIndex())
-// 			if err != nil {
-// 				Assert("Error getting claim from the merkle tree", err)
-// 			}
-// 			if !entry.Data.Equal(data) {
-// 				Assert("Error", fmt.Errorf("Claim from the merkle tree (%v) "+
-// 					"doesn't match the expected claim (%v)",
-// 					data.String(), entry.Data.String()))
-// 			}
-// 		}
-// 	}
-//
-// 	return proofClaims
-// }
-
 type Server struct {
 	Cfg                      *config.Config
 	stopchPublish            chan (interface{})
@@ -241,8 +136,7 @@ type Server struct {
 	IdenPubOffChainWriteHttp *idenpuboffchainwriterhttp.IdenPubOffChainWriteHttp
 	KeyStore                 *ethkeystore.KeyStore
 	KeyStoreBaby             *babykeystore.KeyStore
-	Web3                     *eth.Web3Client
-	EthClient2               *eth.Client2
+	EthClient                *eth.Client
 	KOp                      *babyjub.PublicKey
 }
 
@@ -313,17 +207,12 @@ func LoadServer(cfg *config.Config) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	client, err := LoadWeb3(ks, acc, cfg.Web3.Url)
-	if err != nil {
-		return nil, err
-	}
-	client2, err := LoadEthClient2(ks, acc, cfg.Web3.Url)
-	// client2, err := LoadEthClient2(nil, nil, cfg.Web3.Url)
+	ethClient, err := LoadEthClient(ks, acc, cfg.Web3.Url)
 	if err != nil {
 		return nil, err
 	}
 
-	idenPubOnChain := idenpubonchain.New(client2, idenpubonchain.ContractAddresses{
+	idenPubOnChain := idenpubonchain.New(ethClient, idenpubonchain.ContractAddresses{
 		IdenStates: cfg.Contracts.IdenStates.Address,
 	})
 	storage, err := LoadStorage(cfg.Storage.Path)
@@ -346,20 +235,18 @@ func LoadServer(cfg *config.Config) (*Server, error) {
 	// kUpdateMtp := proofClaims.KUpdateRoot.Proof.Mtp0.Bytes()
 
 	return &Server{
-		Cfg:              cfg,
-		stopchPublish:    make(chan (interface{})),
-		stoppedchPublish: make(chan (interface{})),
-		stopchSync:       make(chan (interface{})),
-		stoppedchSync:    make(chan (interface{})),
-		Issuer:           is,
-		// Mt:             mt,
+		Cfg:                      cfg,
+		stopchPublish:            make(chan (interface{})),
+		stoppedchPublish:         make(chan (interface{})),
+		stopchSync:               make(chan (interface{})),
+		stoppedchSync:            make(chan (interface{})),
+		Issuer:                   is,
 		IdenPubOnChain:           idenPubOnChain,
 		IdenPubOffChainWriteHttp: idenPubOffChainWriteHttp,
 		// KeyStore:       ks,
 		KeyStore:     nil,
 		KeyStoreBaby: ksBaby,
-		Web3:         client,
-		EthClient2:   client2,
+		EthClient:    ethClient,
 		KOp:          kOp,
 	}, nil
 }
