@@ -51,7 +51,7 @@ func Fail(c *gin.Context, msg string, err error) {
 
 // func HandleRawImport(c *gin.Context, srv *loaders.Server) {
 // 	var data map[string]string
-// 	err := c.BindJSON(&data)
+// 	err := c.ShouldBindJSON(&data)
 // 	if err != nil {
 // 		Fail(c, "json parsing error", err)
 // 		return
