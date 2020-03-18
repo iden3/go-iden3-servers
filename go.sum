@@ -160,10 +160,14 @@ github.com/iden3/go-iden3-core v0.0.7-0.20200129112352-8ea02a467e4a h1:3L6bSsd0T
 github.com/iden3/go-iden3-core v0.0.7-0.20200129112352-8ea02a467e4a/go.mod h1:m5JovHDSOA3wWNcb8tpLYOLyN/QkYO8TZXx++2Y8B3w=
 github.com/iden3/go-iden3-core v0.0.7-0.20200213165305-161fa5bfa30f h1:RhU8q6n+088YAjyLaybpbyw+R0RA/a4LauYHdBOkHzk=
 github.com/iden3/go-iden3-core v0.0.7-0.20200213165305-161fa5bfa30f/go.mod h1:ByKO7a6p/2eAf/zSLthR5SIjQMIKrKCiB3WNQxHjdCg=
+github.com/iden3/go-iden3-core v0.0.7 h1:XIrHu4s1PUIg/TsZMQZ42Sr4hM5pifD9OYBz5xT9pxU=
+github.com/iden3/go-iden3-core v0.0.7/go.mod h1:N9xiQvwx5EZhrVuO0hW8GBF9Uy0ZbONdhguPHSC+wQg=
 github.com/iden3/go-iden3-crypto v0.0.3-0.20190831180703-c95c95b7b161 h1:m/JbZo+lzlIX02tmV12mKa6010dfJegs2jCsgB23udM=
 github.com/iden3/go-iden3-crypto v0.0.3-0.20190831180703-c95c95b7b161/go.mod h1:LLcgB7DLWAUs+8eBSKne+ZHy5z7xtAmlYlEz0M9M8gE=
 github.com/iden3/go-iden3-crypto v0.0.3 h1:/Z4DHEPTKvWSM0F1DOp9tj9cQmifc3F+4QK2Pzu9Pqw=
 github.com/iden3/go-iden3-crypto v0.0.3/go.mod h1:LLcgB7DLWAUs+8eBSKne+ZHy5z7xtAmlYlEz0M9M8gE=
+github.com/iden3/go-iden3-crypto v0.0.4 h1:rGQEFBvX6d4fDxqkQTizVq5UefB+xdZAg8j5FQ6uv6g=
+github.com/iden3/go-iden3-crypto v0.0.4/go.mod h1:LLcgB7DLWAUs+8eBSKne+ZHy5z7xtAmlYlEz0M9M8gE=
 github.com/iden3/go-public-key-encryption v0.0.0-20200129111956-c21e08c0ca6d h1:4nwqheKHIVGpMt+H5IdjagXRbD7jSA3c9OfXOVYg8VU=
 github.com/iden3/go-public-key-encryption v0.0.0-20200129111956-c21e08c0ca6d/go.mod h1:ywEbbcgoETcOzZQ7YedY67DfG8tPuHbH89yn0zhjjeU=
 github.com/influxdata/influxdb v1.2.3-0.20180221223340-01288bdb0883/go.mod h1:qZna6X/4elxqT3yI9iZYdZrWWdeFOOprn86kgg4+IzY=
@@ -304,6 +308,7 @@ github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQD
 github.com/sergi/go-diff v1.0.0/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=
 github.com/shurcooL/sanitized_anchor_name v1.0.0 h1:PdmoCO6wvbs+7yrJyMORt4/BmY5IYyJwS/kOiWx8mHo=
 github.com/shurcooL/sanitized_anchor_name v1.0.0/go.mod h1:1NzhyTcUVG4SuEtjjoZeVRXNmyL/1OwPU0+IJeTBvfc=
+github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726/go.mod h1:3yhqj7WBBfRhbBlzyOC3gUxftwsU0u8gqevxwIHQpMw=
 github.com/sirupsen/logrus v1.4.2 h1:SPIRibHv4MatM3XXNO2BJeFLZwZ2LvZgfQ5+UNI2im4=
 github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE=
 github.com/spacemonkeygo/openssl v0.0.0-20181017203307-c2dcc5cca94a/go.mod h1:7AyxJNCJ7SBZ1MfVQCWD6Uqo2oubI2Eq2y2eqf+A5r0=
