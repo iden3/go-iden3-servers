@@ -30,7 +30,7 @@ func (d *Duration) UnmarshalText(data []byte) error {
 }
 
 type Contract struct {
-	JsonABI string         `validate:"required"`
+	// JsonABI string         `validate:"required"`
 	Address common.Address `validate:"required"`
 }
 

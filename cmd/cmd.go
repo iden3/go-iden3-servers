@@ -14,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	common3 "github.com/iden3/go-iden3-core/common"
+	"github.com/iden3/go-iden3-core/components/idenpubonchain"
 	"github.com/iden3/go-iden3-core/db"
 	"github.com/iden3/go-iden3-core/identity/issuer"
 	babykeystore "github.com/iden3/go-iden3-core/keystore"
@@ -426,6 +427,46 @@ func CmdNewEthAccount(c *cli.Context) error {
 	fmt.Fprintf(os.Stderr, "Ethereum Account created successfully."+
 		" Copy & paste the lines between '---' into the config file:\n")
 	printAccountToml(account)
+
+	return nil
+}
+
+func CmdDeployState(c *cli.Context) error {
+	var cfg struct {
+		Web3     config.Web3     `validate:"required"`
+		KeyStore config.KeyStore `validate:"required"`
+		Account  struct {
+			Address common.Address `validate:"required"`
+		} `validate:"required"`
+	}
+	if err := config.LoadFromCliFlag(c, &cfg); err != nil {
+		return err
+	}
+	ks, acc, err := loaders.LoadKeyStore(&cfg.KeyStore, &cfg.Account.Address)
+	if err != nil {
+		return err
+	}
+	ethClient, err := loaders.LoadEthClient(ks, acc, cfg.Web3.Url)
+	if err != nil {
+		return err
+	}
+	result, err := idenpubonchain.DeployState(ethClient, nil)
+	if err != nil {
+		return err
+	}
+
+	var config struct {
+		Contracts config.Contracts `validate:"required"`
+	}
+	config.Contracts.IdenStates.Address = result.State.Address
+	var configTOML bytes.Buffer
+	if err := toml.NewEncoder(&configTOML).Encode(&config); err != nil {
+		log.Error(err)
+	}
+
+	fmt.Fprintf(os.Stderr, "\n---\n")
+	fmt.Print(configTOML.String())
+	fmt.Fprintf(os.Stderr, "---\n")
 
 	return nil
 }
