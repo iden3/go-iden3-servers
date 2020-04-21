@@ -153,7 +153,9 @@ func (s *Server) Start() error {
 			case <-time.After(s.Cfg.Issuer.PublishStatePeriod.Duration):
 				log.Debug("Issuer.PublishState()...")
 				if err := s.Issuer.PublishState(); err != nil {
-					log.Error(fmt.Errorf("Error on Issuer.PublishState: %w", err))
+					if err != issuer.ErrIdenStatePendingNotNil {
+						log.WithField("err", err).Error("Issuer.PublishState")
+					}
 				}
 				state, _ := s.Issuer.State()
 				onchain := s.Issuer.IdenStateOnChain()
@@ -174,8 +176,7 @@ func (s *Server) Start() error {
 			case <-time.After(s.Cfg.Issuer.SyncIdenStatePublicPeriod.Duration):
 				log.Debug("Issuer.SyncIdenStatePublic()...")
 				if err := s.Issuer.SyncIdenStatePublic(); err != nil {
-					log.Error(fmt.Errorf(
-						"Error on Issuer.SyncIdenStatePublicPeriod: %w", err))
+					log.WithField("err", err).Error("Issuer.SyncIdenStatePublicPeriod")
 				}
 				state, _ := s.Issuer.State()
 				pending := s.Issuer.IdenStatePending()
