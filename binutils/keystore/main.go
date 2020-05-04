@@ -63,7 +63,11 @@ func main() {
 	case "dump":
 		for i, pk := range ks.Keys() {
 			fmt.Printf("%02d - pk: %v\n", i, hex.EncodeToString(pk[:]))
-			sk, err := ks.ExportKey(&pk, []byte(*pass))
+			err := ks.UnlockKey(&pk, []byte(*pass))
+			if err != nil {
+				panic(err)
+			}
+			sk, err := ks.ExportKey(&pk)
 			if err != nil {
 				panic(err)
 			}
