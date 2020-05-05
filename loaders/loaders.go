@@ -112,10 +112,18 @@ func LoadIdenPubOffChainWriteHttp(storage db.Storage, id *core.ID,
 
 func LoadIssuer(id *core.ID, storage db.Storage, keyStore *babykeystore.KeyStore,
 	idenPubOnChain idenpubonchain.IdenPubOnChainer,
+	idenStateZKProofCfg *config.IdenStateZKProof,
 	idenPubOffChainWrite idenpuboffchain.IdenPubOffChainWriter) (*issuer.Issuer, error) {
 
+	idenStateZkProofConf := &issuer.IdenStateZkProofConf{
+		Levels:              idenStateZKProofCfg.Levels,
+		PathWitnessCalcWASM: idenStateZKProofCfg.PathWitnessCalcWASM,
+		PathProvingKey:      idenStateZKProofCfg.PathProvingKey,
+		PathVerifyingKey:    idenStateZKProofCfg.PathVerifyingKey,
+		CacheProvingKey:     idenStateZKProofCfg.CacheProvingKey,
+	}
 	idenStorage := storage.WithPrefix([]byte(fmt.Sprintf("%v:", id)))
-	is, err := issuer.Load(idenStorage, keyStore, idenPubOnChain, idenPubOffChainWrite)
+	is, err := issuer.Load(idenStorage, keyStore, idenPubOnChain, idenStateZkProofConf, idenPubOffChainWrite)
 	if err != nil {
 		return nil, fmt.Errorf("Error loading issuer: %w", err)
 	}
@@ -227,7 +235,12 @@ func LoadServer(cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 
-	is, err := LoadIssuer(&cfg.Identity.Id, storage, ksBaby, idenPubOnChain, idenPubOffChainWriteHttp)
+	if err := cfg.IdenStateZKProof.Load(); err != nil {
+		return nil, err
+	}
+
+	is, err := LoadIssuer(&cfg.Identity.Id, storage, ksBaby, idenPubOnChain, &cfg.IdenStateZKProof,
+		idenPubOffChainWriteHttp)
 	if err != nil {
 		return nil, err
 	}
