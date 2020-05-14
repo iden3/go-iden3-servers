@@ -3,15 +3,9 @@ package config
 import (
 
 	// common3 "github.com/iden3/go-iden3-core/common"
-	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
+
 	"fmt"
-	"io"
 	"io/ioutil"
-	"net/http"
-	"os"
-	"path"
 	"strings"
 	"time"
 
@@ -19,10 +13,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/go-playground/validator/v10"
 	"github.com/iden3/go-iden3-core/core"
+	zkutils "github.com/iden3/go-iden3-core/utils/zk"
 	"github.com/iden3/go-iden3-crypto/babyjub"
 	"github.com/urfave/cli"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type Duration struct {
@@ -129,90 +122,26 @@ type IdenPubOffChain struct {
 	} `validate:"required"`
 }
 
-type IdenStateZKProof struct {
-	Levels              int    `validate:"required"`
-	Url                 string `validate:"required"`
-	Path                string `validate:"required"`
-	Hashes              map[string]string
-	PathWitnessCalcWASM string `validate:"-"`
-	PathProvingKey      string `validate:"-"`
-	PathVerifyingKey    string `validate:"-"`
-	CacheProvingKey     bool   `validate:"required"`
+type ZkFilesHashes struct {
+	ProvingKey      string `validate:"required"`
+	VerificationKey string `validate:"required"`
+	WitnessCalcWASM string `validate:"required"`
 }
 
-func (z *IdenStateZKProof) Load() error {
-	if err := os.MkdirAll(z.Path, 0700); err != nil {
-		return err
-	}
-	for _, basename := range []string{"circuit.wasm", "proving_key.json", "verification_key.json"} {
-		hash, ok := z.Hashes[basename]
-		if !ok {
-			return fmt.Errorf("missing hash for %v", basename)
-		}
-
-		filename := path.Join(z.Path, basename)
-		_, err := os.Stat(filename)
-		if err == nil {
-			if err := checkHash(filename, hash); err != nil {
-				return err
-			}
-			log.WithField("filename", filename).Debug("Skipping downloading zk file")
-			continue
-		} else if !os.IsNotExist(err) {
-			return err
-		}
-		url := fmt.Sprintf("%s/%s", z.Url, basename)
-		log.WithField("filename", filename).WithField("url", url).Debug("Downloading zk file")
-		if err := download(url, filename); err != nil {
-			return err
-		}
-		if err := checkHash(filename, hash); err != nil {
-			return err
-		}
-	}
-	z.PathWitnessCalcWASM = path.Join(z.Path, "circuit.wasm")
-	z.PathProvingKey = path.Join(z.Path, "proving_key.json")
-	z.PathVerifyingKey = path.Join(z.Path, "verification_key.json")
-	return nil
+type ZkFiles struct {
+	Url             string
+	Path            string `validate:"required"`
+	CacheProvingKey bool
+	Hashes          ZkFilesHashes `validate:"required"`
 }
 
-func checkHash(filename, hashStr string) error {
-	hash, err := hex.DecodeString(hashStr)
-	if err != nil {
-		return err
+func (z *ZkFiles) Value() *zkutils.ZkFiles {
+	hashes := zkutils.ZkFilesHashes{
+		ProvingKey:      z.Hashes.ProvingKey,
+		VerificationKey: z.Hashes.VerificationKey,
+		WitnessCalcWASM: z.Hashes.WitnessCalcWASM,
 	}
-	f, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	hasher := sha256.New()
-	if _, err := io.Copy(hasher, f); err != nil {
-		return err
-	}
-	h := hasher.Sum(nil)
-	if bytes.Compare(h, hash) != 0 {
-		fmt.Printf("\"%s\": \"%s\",\n", path.Base(filename), hex.EncodeToString(h))
-		return fmt.Errorf("hash mismatch: expected %v but got %v", hashStr, hex.EncodeToString(h))
-	}
-	return nil
-}
-
-func download(url, filename string) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	f, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	_, err = io.Copy(f, resp.Body)
-	return err
+	return zkutils.NewZkFiles(z.Url, z.Path, hashes, z.CacheProvingKey)
 }
 
 type Config struct {
@@ -233,9 +162,13 @@ type Config struct {
 	Issuer struct {
 		PublishStatePeriod        Duration `validate:"required"`
 		SyncIdenStatePublicPeriod Duration `validate:"required"`
+		ConfirmBlocks             uint64   `validate:"required"`
 	}
-	IdenPubOffChain  IdenPubOffChain  `validate:"required"`
-	IdenStateZKProof IdenStateZKProof `validate:"required"`
+	IdenPubOffChain  IdenPubOffChain `validate:"required"`
+	IdenStateZKProof struct {
+		Levels int     `validate:"required"`
+		Files  ZkFiles `validate:"required"`
+	} `validate:"required"`
 	// Names struct {
 	// 	Path string `validate:"required"`
 	// } `validate:"required"`

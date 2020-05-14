@@ -10,7 +10,7 @@ require (
 	github.com/gin-contrib/cors v1.3.0
 	github.com/gin-gonic/gin v1.5.0
 	github.com/go-playground/validator/v10 v10.1.0
-	github.com/iden3/go-iden3-core v0.0.8-0.20200507112929-c9f63993e6b2
+	github.com/iden3/go-iden3-core v0.0.8-0.20200515134003-99b3cc33f463
 	github.com/iden3/go-iden3-crypto v0.0.5-0.20200428163115-b1468fc0760f
 	github.com/iden3/go-public-key-encryption v0.0.0-20200129111956-c21e08c0ca6d
 	github.com/ipfs/go-ipfs-api v0.0.3

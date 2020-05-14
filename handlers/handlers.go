@@ -21,6 +21,12 @@ func Fail(c *gin.Context, msg string, err error) {
 	return
 }
 
+func HandleStatus(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"status": "online",
+	})
+}
+
 // Generic
 // func HandleGetRoot(c *gin.Context, srv *loaders.Server) {
 // 	// get the contract data
