@@ -2,8 +2,6 @@ module github.com/iden3/go-iden3-servers
 
 go 1.13
 
-// replace github.com/iden3/go-iden3-core => ../go-iden3-core
-
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/ethereum/go-ethereum v1.9.13
@@ -20,3 +18,5 @@ require (
 	github.com/urfave/cli v1.22.2
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 )
+
+replace github.com/iden3/go-iden3-core => ../go-iden3-core

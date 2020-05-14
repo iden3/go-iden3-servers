@@ -167,8 +167,11 @@ github.com/huin/goutil v0.0.0-20170803182201-1ca381bf3150/go.mod h1:PpLOETDnJ0o3
 github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0/go.mod h1:N0Wam8K1arqPXNWjMo21EXnBPOPp36vB07FNRdD2geA=
 github.com/iden3/go-circom-prover-verifier v0.0.0-20200426193719-dc4ac0b35021 h1:8/kQqiMDWCvR2mkEHnX3srnY4qLBd1SZAiuOHFMjr7k=
 github.com/iden3/go-circom-prover-verifier v0.0.0-20200426193719-dc4ac0b35021/go.mod h1:ZGStP/GSsKbIaLEowo7JmqnWgneFAapA4NrZakHcUk4=
+github.com/iden3/go-circom-prover-verifier v0.0.0-20200507101508-1aa316cbd2cf h1:L+zRFd+U++5C8/nvGU2kFBA9iJ+u9hCva3fM2ckvOs8=
+github.com/iden3/go-circom-prover-verifier v0.0.0-20200507101508-1aa316cbd2cf/go.mod h1:ZGStP/GSsKbIaLEowo7JmqnWgneFAapA4NrZakHcUk4=
 github.com/iden3/go-circom-witnesscalc v0.0.0-20200428090142-66259888c6fd h1:Z1OSMreh1dB7jpzNA/3+8yJDoOy/r+cjaNpRCjQtUEM=
 github.com/iden3/go-circom-witnesscalc v0.0.0-20200428090142-66259888c6fd/go.mod h1:c3FEU+iwM55k0lvzpwkCk5ljmv+gV2nnkCVHiuUDxFo=
+github.com/iden3/go-circom-witnesscalc v0.0.0-20200429093613-a13396c6e429 h1:UTGpt2GCsNNC2sSYS6iBUDnR75HiCkogHdVSI2JyUsk=
 github.com/iden3/go-circom-witnesscalc v0.0.0-20200429093613-a13396c6e429/go.mod h1:c3FEU+iwM55k0lvzpwkCk5ljmv+gV2nnkCVHiuUDxFo=
 github.com/iden3/go-iden3-core v0.0.7-0.20200129112352-8ea02a467e4a h1:3L6bSsd0T7qXkC4VYyUIY9Jx8GNm2Or5wT5ktadg4Wg=
 github.com/iden3/go-iden3-core v0.0.7-0.20200129112352-8ea02a467e4a/go.mod h1:m5JovHDSOA3wWNcb8tpLYOLyN/QkYO8TZXx++2Y8B3w=
@@ -270,6 +273,8 @@ github.com/minio/sha256-simd v0.1.1-0.20190913151208-6de447530771/go.mod h1:B5e1
 github.com/mitchellh/copystructure v1.0.0/go.mod h1:SNtv71yrdKgLRyLFxmLdkAbkKEFWgYaq1OVrnRcwhnw=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
+github.com/mitchellh/mapstructure v1.3.0 h1:iDwIio/3gk2QtLLEsqU5lInaMzos0hDTz8a6lazSFVw=
+github.com/mitchellh/mapstructure v1.3.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/mitchellh/reflectwalk v1.0.0/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
