@@ -241,7 +241,7 @@ func CmdDbIPFSexport(c *cli.Context, storagePath string) error {
 	return nil
 }
 
-func NewIssuer(storagePath, keyStoreBabyPath, keyStoreBabyPassword string) error {
+func NewIssuer(storagePath, keyStoreBabyPath, keyStoreBabyPassword string, confirmBlocks uint64) error {
 	// Open babyjub keystore
 	params := babykeystore.StandardKeyStoreParams
 	keyStoreStorage := babykeystore.NewFileStorage(keyStoreBabyPath)
@@ -260,6 +260,7 @@ func NewIssuer(storagePath, keyStoreBabyPath, keyStoreBabyPassword string) error
 	// Create the Issuer in a memory db and later transfer it to the storage under the identity prefix
 	memStorage := db.NewMemoryStorage()
 	cfg := issuer.ConfigDefault
+	cfg.ConfirmBlocks = confirmBlocks
 	id, err := issuer.Create(cfg, kOpComp, nil, memStorage, keyStore)
 	if err != nil {
 		return err
@@ -311,11 +312,15 @@ func CmdNewIssuer(c *cli.Context) error {
 		Storage      struct {
 			Path string
 		} `validate:"required"`
+		Issuer struct {
+			ConfirmBlocks uint64 `validate:"required"`
+		}
 	}
 	if err := config.LoadFromCliFlag(c, &cfg); err != nil {
 		return err
 	}
-	return NewIssuer(cfg.Storage.Path, cfg.KeyStoreBaby.Path, cfg.KeyStoreBaby.Password.Value)
+	return NewIssuer(cfg.Storage.Path, cfg.KeyStoreBaby.Path, cfg.KeyStoreBaby.Password.Value,
+		cfg.Issuer.ConfirmBlocks)
 }
 
 func CmdStop(c *cli.Context, cfg *config.Config) error {
