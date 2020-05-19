@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"math/big"
 	"os"
 	"strconv"
 	"strings"
@@ -360,7 +361,7 @@ func CmdStart(c *cli.Context, cfg *config.Config, endpointServe func(cfg *config
 		"balance": balance.String(),
 		"address": srv.EthClient.Account().Address.Hex(),
 	}).Info("Account balance retrieved")
-	if balance.Int64() < 3000000 {
+	if balance.Cmp(new(big.Int).SetUint64(3000000)) == -1 {
 		return fmt.Errorf("Not enough funds in the ethereum address")
 	}
 
