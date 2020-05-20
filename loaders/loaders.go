@@ -160,9 +160,11 @@ func (s *Server) Start() error {
 				}
 				state, _ := s.Issuer.State()
 				onchain := s.Issuer.IdenStateOnChain()
-				pending := s.Issuer.IdenStatePending()
+				pending, transacted := s.Issuer.IdenStatePending()
 				log.WithField("state", state).WithField("onchain", onchain).
-					WithField("pending", pending).Debug("Issuer.PublishState()")
+					WithField("pending", pending).
+					WithField("txed", transacted).
+					Debug("Issuer.PublishState()")
 			}
 		}
 	}()
@@ -180,10 +182,12 @@ func (s *Server) Start() error {
 					log.WithField("err", err).Error("Issuer.SyncIdenStatePublicPeriod")
 				}
 				state, _ := s.Issuer.State()
-				pending := s.Issuer.IdenStatePending()
+				pending, transacted := s.Issuer.IdenStatePending()
 				onchain := s.Issuer.IdenStateOnChain()
 				log.WithField("state", state).WithField("onchain", onchain).
-					WithField("pending", pending).Debug("Issuer.SyncIdenStatePublic()")
+					WithField("pending", pending).
+					WithField("txed", transacted).
+					Debug("Issuer.SyncIdenStatePublic()")
 			}
 		}
 	}()
