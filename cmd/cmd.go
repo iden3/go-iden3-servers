@@ -19,6 +19,7 @@ import (
 	"github.com/iden3/go-iden3-core/db"
 	"github.com/iden3/go-iden3-core/identity/issuer"
 	babykeystore "github.com/iden3/go-iden3-core/keystore"
+	zkutils "github.com/iden3/go-iden3-core/utils/zk"
 	"github.com/iden3/go-iden3-servers/config"
 	"github.com/iden3/go-iden3-servers/loaders"
 	shell "github.com/ipfs/go-ipfs-api"
@@ -461,36 +462,86 @@ func CmdDeployState(c *cli.Context) error {
 		return err
 	}
 
-	var config struct {
+	var cfgOut struct {
 		Contracts config.Contracts `validate:"required"`
 	}
-	config.Contracts.IdenStates.Address = result.State.Address
-	var configTOML bytes.Buffer
-	if err := toml.NewEncoder(&configTOML).Encode(&config); err != nil {
+	cfgOut.Contracts.IdenStates.Address = result.State.Address
+	var cfgOutTOML bytes.Buffer
+	if err := toml.NewEncoder(&cfgOutTOML).Encode(&cfgOut); err != nil {
 		log.Error(err)
 	}
 
 	fmt.Fprintf(os.Stderr, "\n---\n")
-	fmt.Print(configTOML.String())
+	fmt.Print(cfgOutTOML.String())
 	fmt.Fprintf(os.Stderr, "---\n")
 
 	return nil
 }
 
 func printAccountToml(account accounts.Account) {
-	var config struct {
+	var cfg struct {
 		Account struct {
 			Address common.Address
 		}
 	}
-	config.Account.Address = account.Address
+	cfg.Account.Address = account.Address
 
-	var configTOML bytes.Buffer
-	if err := toml.NewEncoder(&configTOML).Encode(&config); err != nil {
+	var cfgTOML bytes.Buffer
+	if err := toml.NewEncoder(&cfgTOML).Encode(&cfg); err != nil {
 		log.Error(err)
 	}
 
 	fmt.Fprintf(os.Stderr, "\n---\n")
-	fmt.Print(configTOML.String())
+	fmt.Print(cfgTOML.String())
 	fmt.Fprintf(os.Stderr, "---\n")
+}
+
+func CmdDownloadZKFiles(c *cli.Context) error {
+	url := c.GlobalString("url")
+	if url == "" {
+		return fmt.Errorf("No url specified")
+	}
+	path := c.GlobalString("path")
+	if path == "" {
+		return fmt.Errorf("No path specified")
+	}
+	zkfiles := zkutils.NewZkFiles(url, path, zkutils.ZkFilesHashes{}, false)
+	if err := zkfiles.InsecureDownloadAll(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func CmdHashZKFiles(c *cli.Context) error {
+	path := c.GlobalString("path")
+	if path == "" {
+		return fmt.Errorf("No path specified")
+	}
+	zkfiles := zkutils.NewZkFiles("", path, zkutils.ZkFilesHashes{}, false)
+	zkFilesHashes, err := zkfiles.InsecureCalcHashes()
+	if err != nil {
+		return err
+	}
+
+	var cfg struct {
+		Files config.ZkFiles
+	}
+	cfg.Files.Path = path
+	cfg.Files.Hashes = config.ZkFilesHashes{
+		ProvingKey:      zkFilesHashes.ProvingKey,
+		VerificationKey: zkFilesHashes.VerificationKey,
+		WitnessCalcWASM: zkFilesHashes.WitnessCalcWASM,
+	}
+
+	var cfgTOML bytes.Buffer
+	if err := toml.NewEncoder(&cfgTOML).Encode(&cfg.Files.Hashes); err != nil {
+		log.Error(err)
+	}
+
+	fmt.Fprintf(os.Stderr, "ZkFiles hashes calculated successfully."+
+		" Copy & paste the lines between '---' into the config file:\n")
+	fmt.Fprintf(os.Stderr, "\n---\n")
+	fmt.Print(cfgTOML.String())
+	fmt.Fprintf(os.Stderr, "---\n")
+	return nil
 }
