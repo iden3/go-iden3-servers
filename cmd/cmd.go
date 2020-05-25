@@ -496,6 +496,22 @@ func printAccountToml(account accounts.Account) {
 	fmt.Fprintf(os.Stderr, "---\n")
 }
 
+func ValidateZKFilesProvingKeyFormat(format string) (zkutils.ProvingKeyFormat, error) {
+	match := false
+	provingKeyFormat := zkutils.ProvingKeyFormat(format)
+	for _, f := range []zkutils.ProvingKeyFormat{zkutils.ProvingKeyFormatJSON,
+		zkutils.ProvingKeyFormatBin, zkutils.ProvingKeyFormatGoBin} {
+		if provingKeyFormat == f {
+			match = true
+			break
+		}
+	}
+	if !match {
+		return "", fmt.Errorf("invalid ProvingKeyFormat %v", provingKeyFormat)
+	}
+	return provingKeyFormat, nil
+}
+
 func CmdDownloadZKFiles(c *cli.Context) error {
 	url := c.GlobalString("url")
 	if url == "" {
@@ -505,7 +521,11 @@ func CmdDownloadZKFiles(c *cli.Context) error {
 	if path == "" {
 		return fmt.Errorf("No path specified")
 	}
-	zkfiles := zkutils.NewZkFiles(url, path, zkutils.ZkFilesHashes{}, false)
+	format, err := ValidateZKFilesProvingKeyFormat(c.GlobalString("format"))
+	if err != nil {
+		return err
+	}
+	zkfiles := zkutils.NewZkFiles(url, path, format, zkutils.ZkFilesHashes{}, false)
 	if err := zkfiles.InsecureDownloadAll(); err != nil {
 		return err
 	}
@@ -517,7 +537,11 @@ func CmdHashZKFiles(c *cli.Context) error {
 	if path == "" {
 		return fmt.Errorf("No path specified")
 	}
-	zkfiles := zkutils.NewZkFiles("", path, zkutils.ZkFilesHashes{}, false)
+	format, err := ValidateZKFilesProvingKeyFormat(c.GlobalString("format"))
+	if err != nil {
+		return err
+	}
+	zkfiles := zkutils.NewZkFiles("", path, format, zkutils.ZkFilesHashes{}, false)
 	zkFilesHashes, err := zkfiles.InsecureCalcHashes()
 	if err != nil {
 		return err
@@ -543,5 +567,25 @@ func CmdHashZKFiles(c *cli.Context) error {
 	fmt.Fprintf(os.Stderr, "\n---\n")
 	fmt.Print(cfgTOML.String())
 	fmt.Fprintf(os.Stderr, "---\n")
+	return nil
+}
+
+func CmdCheckZKFiles(c *cli.Context) error {
+	url := c.GlobalString("url")
+	if url == "" {
+		return fmt.Errorf("No url specified")
+	}
+	path := c.GlobalString("path")
+	if path == "" {
+		return fmt.Errorf("No path specified")
+	}
+	format, err := ValidateZKFilesProvingKeyFormat(c.GlobalString("format"))
+	if err != nil {
+		return err
+	}
+	zkfiles := zkutils.NewZkFiles(url, path, format, zkutils.ZkFilesHashes{}, false)
+	if err := zkfiles.InsecureDownloadAll(); err != nil {
+		return err
+	}
 	return nil
 }

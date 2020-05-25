@@ -129,19 +129,23 @@ type ZkFilesHashes struct {
 }
 
 type ZkFiles struct {
-	Url             string
-	Path            string `validate:"required"`
-	CacheProvingKey bool
-	Hashes          ZkFilesHashes `validate:"required"`
+	Url              string
+	Path             string `validate:"required"`
+	ProvingKeyFormat zkutils.ProvingKeyFormat
+	CacheProvingKey  bool
+	Hashes           ZkFilesHashes `validate:"required"`
 }
 
 func (z *ZkFiles) Value() *zkutils.ZkFiles {
+	if z.ProvingKeyFormat == "" {
+		z.ProvingKeyFormat = zkutils.ProvingKeyFormatJSON
+	}
 	hashes := zkutils.ZkFilesHashes{
 		ProvingKey:      z.Hashes.ProvingKey,
 		VerificationKey: z.Hashes.VerificationKey,
 		WitnessCalcWASM: z.Hashes.WitnessCalcWASM,
 	}
-	return zkutils.NewZkFiles(z.Url, z.Path, hashes, z.CacheProvingKey)
+	return zkutils.NewZkFiles(z.Url, z.Path, z.ProvingKeyFormat, hashes, z.CacheProvingKey)
 }
 
 type Config struct {

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
+	zkutils "github.com/iden3/go-iden3-core/utils/zk"
 	"github.com/iden3/go-iden3-servers/cmd"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -13,8 +15,11 @@ func main() {
 	app.Name = "zkfiles-iden3"
 	app.Version = "0.0.1-alpha"
 	app.Flags = []cli.Flag{
-		cli.StringFlag{Name: "path"},
-		cli.StringFlag{Name: "url"},
+		cli.StringFlag{Name: "path", Required: true},
+		cli.StringFlag{Name: "url", Required: false},
+		cli.StringFlag{Name: "format", Required: true,
+			Usage: fmt.Sprintf("Options: %v, %v, %v", zkutils.ProvingKeyFormatJSON,
+				zkutils.ProvingKeyFormatBin, zkutils.ProvingKeyFormatGoBin)},
 	}
 
 	app.Commands = []cli.Command{
