@@ -178,6 +178,7 @@ github.com/iden3/go-circom-witnesscalc v0.0.0-20200428090142-66259888c6fd h1:Z1O
 github.com/iden3/go-circom-witnesscalc v0.0.0-20200428090142-66259888c6fd/go.mod h1:c3FEU+iwM55k0lvzpwkCk5ljmv+gV2nnkCVHiuUDxFo=
 github.com/iden3/go-circom-witnesscalc v0.0.0-20200429093613-a13396c6e429 h1:UTGpt2GCsNNC2sSYS6iBUDnR75HiCkogHdVSI2JyUsk=
 github.com/iden3/go-circom-witnesscalc v0.0.0-20200429093613-a13396c6e429/go.mod h1:c3FEU+iwM55k0lvzpwkCk5ljmv+gV2nnkCVHiuUDxFo=
+github.com/iden3/go-circom-witnesscalc v0.0.0-20200527122314-25592ab9b33b/go.mod h1:hfw0CzjWlsvZOtOxXsiet+ZuN5YJCSNKvOa4VSsjjvI=
 github.com/iden3/go-iden3-core v0.0.7-0.20200129112352-8ea02a467e4a h1:3L6bSsd0T7qXkC4VYyUIY9Jx8GNm2Or5wT5ktadg4Wg=
 github.com/iden3/go-iden3-core v0.0.7-0.20200129112352-8ea02a467e4a/go.mod h1:m5JovHDSOA3wWNcb8tpLYOLyN/QkYO8TZXx++2Y8B3w=
 github.com/iden3/go-iden3-core v0.0.7-0.20200213165305-161fa5bfa30f h1:RhU8q6n+088YAjyLaybpbyw+R0RA/a4LauYHdBOkHzk=
@@ -198,6 +199,8 @@ github.com/iden3/go-iden3-core v0.0.8-0.20200521160014-a91c08aefb7f h1:LCc8fyakA
 github.com/iden3/go-iden3-core v0.0.8-0.20200521160014-a91c08aefb7f/go.mod h1:ut0/KIWjRPMrE4ZLsUoBum5O9Vx3J+ZV58E+TWYjcaI=
 github.com/iden3/go-iden3-core v0.0.8-0.20200522154712-780c4e804a1a h1:rs7dwrs8AzHlxjdMo+IWAX9FW9FMiBzKy0nV6lt1gL0=
 github.com/iden3/go-iden3-core v0.0.8-0.20200522154712-780c4e804a1a/go.mod h1:gmpIFRakc/EJg1anHL3h0VK2EHk0Z/+1jN9m9PzZ51Y=
+github.com/iden3/go-iden3-core v0.0.8-0.20200527125702-3ace820b1db5 h1:b/x06Yrc5GwR99US5lZqIzWKkm+vsYTFQ8q0vl3Zxw4=
+github.com/iden3/go-iden3-core v0.0.8-0.20200527125702-3ace820b1db5/go.mod h1:Q7WvN8UBKd4nyQ23Sx5kPKUinRovBFOSN241+Fk49L4=
 github.com/iden3/go-iden3-crypto v0.0.3-0.20190831180703-c95c95b7b161 h1:m/JbZo+lzlIX02tmV12mKa6010dfJegs2jCsgB23udM=
 github.com/iden3/go-iden3-crypto v0.0.3-0.20190831180703-c95c95b7b161/go.mod h1:LLcgB7DLWAUs+8eBSKne+ZHy5z7xtAmlYlEz0M9M8gE=
 github.com/iden3/go-iden3-crypto v0.0.3 h1:/Z4DHEPTKvWSM0F1DOp9tj9cQmifc3F+4QK2Pzu9Pqw=
@@ -208,6 +211,7 @@ github.com/iden3/go-iden3-crypto v0.0.5-0.20200421133134-14c3144613d4 h1:C+WGAJM
 github.com/iden3/go-iden3-crypto v0.0.5-0.20200421133134-14c3144613d4/go.mod h1:XKw1oDwYn2CIxKOtr7m/mL5jMn4mLOxAxtZBRxQBev8=
 github.com/iden3/go-iden3-crypto v0.0.5-0.20200428163115-b1468fc0760f h1:geZ9S70cAAo/Dtu9LvUKjWs0rBsDZjWdYzSCkNc+gVE=
 github.com/iden3/go-iden3-crypto v0.0.5-0.20200428163115-b1468fc0760f/go.mod h1:XKw1oDwYn2CIxKOtr7m/mL5jMn4mLOxAxtZBRxQBev8=
+github.com/iden3/go-iden3-crypto v0.0.5-0.20200525100545-2c471ab54594/go.mod h1:XKw1oDwYn2CIxKOtr7m/mL5jMn4mLOxAxtZBRxQBev8=
 github.com/iden3/go-iden3-servers-demo v0.0.1 h1:qQw0nSQQ0j9Vk/aG5D22RtsxiI6v6Cp4ZLyrrxNQf+o=
 github.com/iden3/go-public-key-encryption v0.0.0-20200129111956-c21e08c0ca6d h1:4nwqheKHIVGpMt+H5IdjagXRbD7jSA3c9OfXOVYg8VU=
 github.com/iden3/go-public-key-encryption v0.0.0-20200129111956-c21e08c0ca6d/go.mod h1:ywEbbcgoETcOzZQ7YedY67DfG8tPuHbH89yn0zhjjeU=
